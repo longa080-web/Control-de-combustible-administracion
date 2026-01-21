@@ -9,10 +9,6 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Agregar Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <style>
         /* Reset y estilos generales */
         * {
@@ -884,89 +880,15 @@
         .edit-departamentos-btn:hover {
             background-color: #2980b9;
         }
-
-        /* Login Screen */
-        .login-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: linear-gradient(135deg, #1a2980, #26d0ce);
-        }
-
-        .login-box {
-            background-color: white;
-            padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            width: 90%;
-            max-width: 400px;
-        }
-
-        .login-box h2 {
-            text-align: center;
-            margin-bottom: 1.5rem;
-            color: #2c3e50;
-        }
-
-        .login-box input {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 15px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 1rem;
-        }
-
-        .login-btn {
-            width: 100%;
-            padding: 12px;
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 600;
-            transition: background-color 0.3s;
-        }
-
-        .login-btn:hover {
-            background-color: #2980b9;
-        }
     </style>
 </head>
 <body>
-    <!-- Pantalla de Login (visible inicialmente) -->
-    <div id="loginScreen" class="login-container">
-        <div class="login-box">
-            <h2><i class="fas fa-gas-pump"></i> Sistema de Combustible</h2>
-            <p style="text-align: center; margin-bottom: 20px; color: #666;">Inicie sesión para acceder al sistema</p>
-            <input type="text" id="loginUsername" placeholder="Usuario" value="admin">
-            <input type="password" id="loginPassword" placeholder="Contraseña" value="admin">
-            <button id="loginBtn" class="login-btn">Iniciar Sesión</button>
-            <p style="text-align: center; margin-top: 15px; color: #888; font-size: 0.9rem;">
-                Usuario: admin | Contraseña: admin
-            </p>
-            <p style="text-align: center; margin-top: 20px; font-size: 0.8rem; color: #666;">
-                Sistema de Control de Combustibles © 2024
-            </p>
-        </div>
-    </div>
-
-    <!-- Sistema Principal (oculto inicialmente) -->
-    <div id="mainSystem" class="container" style="display: none;">
+    <div class="container">
         <header>
             <h1><i class="fas fa-gas-pump"></i> Sistema de Control de Combustibles</h1>
             <div class="header-info">
                 <div class="date-time" id="currentDateTime"></div>
                 <div class="total-records">Registros: <span id="totalRecords">0</span></div>
-                <div class="user-info">
-                    <span id="currentUser">Administrador</span>
-                    <button id="logoutBtn" style="margin-left: 10px; background: none; border: 1px solid white; color: white; padding: 2px 8px; border-radius: 3px; cursor: pointer; font-size: 0.8rem;">
-                        <i class="fas fa-sign-out-alt"></i> Salir
-                    </button>
-                </div>
             </div>
         </header>
 
@@ -1428,256 +1350,300 @@
         </div>
 
         <footer>
-            <p>Sistema de Control de Combustibles &copy; 2024 | Última actualización: <span id="lastUpdate"></span></p>
+            <p>Sistema de Control de Combustibles &copy; 2023 | Última actualización: <span id="lastUpdate"></span></p>
         </footer>
     </div>
 
     <script>
-        // =============================================
-        // CONFIGURACIÓN DE FIREBASE
-        // =============================================
-        const firebaseConfig = {
-            apiKey: "TU_API_KEY",
-            authDomain: "TU_AUTH_DOMAIN",
-            projectId: "TU_PROJECT_ID",
-            storageBucket: "TU_STORAGE_BUCKET",
-            messagingSenderId: "TU_MESSAGING_SENDER_ID",
-            appId: "TU_APP_ID"
-        };
-
-        // Inicializar Firebase
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const auth = firebase.auth();
-
-        // =============================================
-        // VARIABLES GLOBALES
-        // =============================================
+        // Precios de combustible (en dólares)
         const PRECIOS = {
-            gasolina: 0.50,
-            gasoil: 0.48
+            gasolina: 0.50,  // $0.50 por litro
+            gasoil: 0.48     // $0.48 por litro
         };
 
+        // Datos de los supervisores (empleados) - INCLUYENDO LOS NUEVOS SUPERVISORES
         const supervisores = [
-            "ANIBAL LOYATO", "PEDRO VIVAS", "FRANCISCO BETANCOURT", "BLANCO NEISABEL", "VILLAMIZAR NANCY",
-            // ... (todos los supervisores del código anterior)
-            "RUIZ EDGAR", "CEBALLOS LEONID", "RUIZ IONA"
+            "ANIBAL LOYATO",
+            "PEDRO VIVAS", 
+            "FRANCISCO BETANCOURT",
+            "BLANCO NEISABEL",
+            "VILLAMIZAR NANCY",
+            "CASTILLO TIBET",
+            "QUINTERO ROSANA",
+            "GONZALEZ LINO",
+            "MORILLO ANA",
+            "CARTAYA LENNYIS",
+            "DELGADO JONATHAN",
+            "TRONCOSO LAIS",
+            "BRITO RONEY",
+            "MUÑOZ KELVIN",
+            "GALEA CESAR",
+            "MORENO GEINES",
+            "MACHADO JOSE",
+            "SUAREZ KIR",
+            "JIMENEZ DAIRELI",
+            "GARCIA ANGELICA",
+            "CONTRERAS NOELIA",
+            "VEGAS ENYMAR",
+            "GOMEZ SAMUEL",
+            "LONGA JESUS",
+            "QUIJADA WILFREDO",
+            "PINO ALEJANDRO",
+            "AMORUZO ANGELO",
+            "CHINCHILLA OSMEL",
+            "TERAN CASTO",
+            "FERRER GABRIEL",
+            "TOVAR LUIS",
+            "ORTA WILNER",
+            "TORRES KEIVER",
+            "RODRIGUEZ MISAEL",
+            "CASTILLO JHOAN",
+            "VILLEGAS OSMER",
+            "RAMOS FREDDY",
+            "TOVAR JAIRO",
+            "PEREZ LUIS",
+            "BRITO JOSE",
+            "ASCANIO FELIX",
+            "CORONADO MIGUEL",
+            "HELLO ALBANY",
+            "PIRELA WILMER",
+            "CASTELLANOS FRANKLIN",
+            "JIMENEZ RONMEL",
+            "PRIETO JAVIER",
+            "LARA EDUARDO",
+            "CASANOVA FABIAN",
+            "CASTILLO ORIANA",
+            "GARRIDO ADOLFO",
+            "MORENO JOELIMAR",
+            "CENTENO LUIS",
+            "NEGRIN CARLOS",
+            "LADERA DAYANA",
+            "PEREZ NELSON",
+            "CHACON EDUARDO",
+            "UZCATEGUI DARWIN",
+            "VALENZUELA CARLOS",
+            "TORRES CARLOS",
+            "LOPEZ JIM",
+            "RAMOS LISMAR",
+            "CHIRINOS RHONY",
+            "MORALES JOSUE",
+            "DELGADO BRAYAN",
+            "REVERON ROGELIO",
+            "CEDEÑO LEONEL",
+            "UZCATEGUI BREINER",
+            "HERNANDEZ RAFAEL",
+            "VILLAMIZAR YOHAN",
+            "CASTRO MANUEL",
+            "BRICEÑO ALEXY",
+            "GONZALEZ JUAN",
+            "ROCA YUNIOR",
+            "DIAZ MANUEL",
+            "ZERPA ODREIMY",
+            "DIAZ ENNIO",
+            "MANRIQUE LUIS",
+            "RODRIGUEZ FELIX",
+            "GARCIA ANGEL",
+            "TONITO JULIO",
+            "GARCIA EDNEY",
+            "CASTRILLO MANUEL",
+            "GUERRERO GABRIEL",
+            "MATHEUS FERNANDO",
+            "GARCIA LUIS",
+            "VELASQUEZ JOSE",
+            "PERNETT CESAR",
+            "RODRIGUEZ OMAR",
+            "RAMIREZ DARWIN",
+            "YEMES GUILLERMO",
+            "BAZAN WILLIAMS",
+            "RAMIREZ FRANKLIN",
+            "LOPEZ JORGE",
+            "RAMOS ROBERT",
+            "SANCHEZ GONZALO",
+            "GARCIA CARLOS",
+            "MENESES KELVIS",
+            "MACHADO DANNY",
+            "ROMERO LUIS",
+            "PALACIOS LUIS",
+            "HERNANDEZ SERGIO",
+            "VERGARA JORGE",
+            "BARRETO ANDRES",
+            "HERNANDEZ LUIS",
+            "MALDONADO DYLAN",
+            "OLIVARES JOHN",
+            "CASTILLO JUNIOR",
+            "MORA DYLAN",
+            "JULIO DANIEL",
+            "CARVAJAL JOSE",
+            "BLANCO EDWAR",
+            "POSADA RAMON",
+            "GUZMAN CESAR",
+            "CAMPOS ARQUIMEDES",
+            "ROJAS RONALD",
+            "MOSQUERA JAVIER",
+            "ESCORCIA ELITH",
+            "VASQUEZ VICTOR",
+            "ESCALONA WUILMER",
+            "YEPEZ CESAR",
+            "QUINTERO OSCAR",
+            "MACHADO CARLOS",
+            "APONTE YOSKARLA",
+            "AZUAJE YAMILETH",
+            "VALERO VANESA",
+            "GIL DEMIAN",
+            "MALVACEA ALANY",
+            "FIGUERA REBECA",
+            "VIVENES YETZIBEL",
+            "BERRIOS RAIDEL",
+            "URBAEZ HEISHMAR",
+            "PEREZ JEIZER",
+            "LABRADOR DAVID",
+            "VELASQUEZ JOSE",
+            "MARQUEZ BETANIA",
+            "GASCA ALEXANDRO",
+            "RIVERO SIMON",
+            "MARRON FABRIZIO",
+            "APONTE AHIBRAN",
+            "TORRES CESAR",
+            "PACHECO ESCARLET",
+            "FERNANDEZ JORGE",
+            "MARQUEZ ACXEL",
+            "BARON YOSMAR",
+            "SANCHEZ SARAI",
+            "GALVAN RICARDO",
+            "SIERRA DAVID",
+            "SERRANO WILLIANA",
+            "ESCORCHE VICTORIA",
+            "LEDEZMA RALTH",
+            "ORTIZ KATHERINE",
+            "SANCHEZ ADRIANA",
+            "RODRIGUEZ MERLIN",
+            "VAMONDE JOSE",
+            "MARTINEZ MARINA",
+            "BORDONARO SEBASTIAN",
+            "LISCANO YAILETH",
+            "PEREZ JENNYFER",
+            "CARRERO JOSHUA",
+            "BASUALDO JORGE",
+            "URBINA GENESIS",
+            "MAGALLANES LUIS",
+            "LEAL GREGORYS",
+            "ESCALONA KARLA",
+            "BRICEÑO ALEXA",
+            "RUIZ EDGAR",
+            "CEBALLOS LEONID",
+            "RUIZ IONA"
         ];
 
+        // Datos de placas de vehículos del Excel proporcionado (sin Caracas)
         const vehiculos = [
             { placa: "AI287GK", departamento: "La Naya", capacidad: 40 },
             { placa: "A40EN9P", departamento: "Los Ruices", capacidad: 30 },
-            // ... (todos los vehículos del código anterior)
+            { placa: "A86AB1B", departamento: "Los Ruices", capacidad: 60 },
+            { placa: "A85AB3B", departamento: "TDH", capacidad: 60 },
+            { placa: "A84AB9B", departamento: "Los Ruices", capacidad: 60 },
+            { placa: "AA079YA", departamento: "MSO", capacidad: 40 },
+            { placa: "A68DN5G", departamento: "MSO", capacidad: 80 },
+            { placa: "A68AB1K", departamento: "Los Ruices", capacidad: 80 },
+            { placa: "A97CE9A", departamento: "Obras", capacidad: 60 },
+            { placa: "AJ572YA", departamento: "MSO", capacidad: 80 },
+            { placa: "AI255GK", departamento: "Los Ruices", capacidad: 40 },
+            { placa: "AI251GK", departamento: "Comerciales", capacidad: 40 },
+            { placa: "AI266GK", departamento: "El Rosal", capacidad: 40 },
+            { placa: "A85AB7B", departamento: "Obras", capacidad: 60 },
+            { placa: "AD455CF", departamento: "MSO", capacidad: 40 },
+            { placa: "A28CR7A", departamento: "Los Ruices", capacidad: 60 },
+            { placa: "EAK19N", departamento: "Obras", capacidad: 40 },
+            { placa: "MFC71X", departamento: "MSO", capacidad: 90 },
+            { placa: "AI283GK", departamento: "Los Ruices", capacidad: 40 },
+            { placa: "A34CF6A", departamento: "Obras", capacidad: 60 },
+            { placa: "62EGBH", departamento: "El Rosal", capacidad: 40 },
+            { placa: "AI272GK", departamento: "El Rosal", capacidad: 40 },
+            { placa: "A95AR6R", departamento: "El Rosal", capacidad: 40 },
+            { placa: "AI280GK", departamento: "La Naya", capacidad: 40 },
+            { placa: "A95AR3R", departamento: "Los Ruices", capacidad: 40 },
+            { placa: "A85AB5B", departamento: "Obras Corporativo", capacidad: 60 },
+            { placa: "AI295GK", departamento: "La Naya", capacidad: 40 },
+            { placa: "A95AW5R", departamento: "Los Ruices", capacidad: 40 },
+            { placa: "A95AR5R", departamento: "Los Ruices", capacidad: 40 },
+            { placa: "AC106XF", departamento: "MSO", capacidad: 60 },
+            { placa: "AB639AI", departamento: "MSO", capacidad: 80 },
+            { placa: "AI268GK", departamento: "El Rosal", capacidad: 40 },
+            { placa: "A72AB2D", departamento: "Los Ruices", capacidad: 100 },
+            { placa: "PAN82X", departamento: "MSO", capacidad: 60 },
+            { placa: "A44AV1L", departamento: "MSO", capacidad: 40 },
+            { placa: "A08EZ3P", departamento: "MSO", capacidad: 600 },
+            { placa: "AI250GK", departamento: "La Naya", capacidad: 40 },
+            { placa: "AC836PG", departamento: "MSO", capacidad: 90 },
+            { placa: "GDF06T", departamento: "MSO", capacidad: 60 },
+            { placa: "A95AR4R", departamento: "Los Ruices", capacidad: 40 },
+            { placa: "AO789SA", departamento: "El Paraiso", capacidad: 40 },
+            { placa: "AA274AS", departamento: "MSO", capacidad: 80 },
+            { placa: "A86AB6B", departamento: "El Rosal", capacidad: 60 },
+            { placa: "A14DK1K", departamento: "MSO", capacidad: 40 },
+            { placa: "AI285GK", departamento: "Los Ruices", capacidad: 40 },
             { placa: "AI263GK", departamento: "Los Ruices", capacidad: 40 }
         ];
 
-        let personalMSO = [
+        // Personal MSO inicial - CORREGIDO SEGÚN TU ESPECIFICACIÓN
+        const personalMSOInicial = [
             { nombre: "Anibal Loyato", cargo: "Vicepresidente", placa: "MFC71X", centroCosto: "MSO" },
             { nombre: "Francisco Betancourt", cargo: "Gerente", placa: "AA079YA", centroCosto: "MSO" },
             { nombre: "Pedro Vivas", cargo: "VP", placa: "AD455CF", centroCosto: "MSO Tec" }
         ];
 
+        // Centros de costo iniciales (cada departamento como centro de costo)
         let centrosCosto = [
-            "C.O Los Ruices", "C.O El Rosal", "C.O La Naya", "C.O El Paraiso",
-            "TDH", "Obras", "Departamento Comercial", "Obras Corporativo", "Backbone", "MSO"
+            "C.O Los Ruices",
+            "C.O El Rosal",  
+            "C.O La Naya",
+            "C.O El Paraiso",
+            "TDH",
+            "Obras",
+            "Departamento Comercial",
+            "Obras Corporativo",
+            "Backbone",
+            "MSO"
         ];
 
+        // Departamentos disponibles (sincronizados con centros de costo)
         let departamentos = [
-            "Los Ruices", "El Rosal", "La Naya", "TDH", "Obras",
-            "Comerciales", "Obras Corporativo", "MSO", "El Paraiso", "Backbone"
+            "Los Ruices",
+            "El Rosal",
+            "La Naya",
+            "TDH",
+            "Obras",
+            "Comerciales",
+            "Obras Corporativo",
+            "MSO",
+            "El Paraiso",
+            "Backbone"
         ];
 
+        // Variables globales
         let registros = [];
+        let personalMSO = [...personalMSOInicial];
         let currentEditId = null;
         let nextId = 1;
         let deptChartInstance = null;
         let fuelTypeChartInstance = null;
 
-        // =============================================
-        // FUNCIONES PRINCIPALES
-        // =============================================
+        // Inicialización cuando el DOM esté listo
         document.addEventListener('DOMContentLoaded', function() {
-            // Configurar login
-            document.getElementById('loginBtn').addEventListener('click', handleLogin);
-            document.getElementById('logoutBtn').addEventListener('click', handleLogout);
-            
-            // También permitir login con Enter
-            document.getElementById('loginPassword').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    handleLogin();
-                }
-            });
-
-            // Inicializar sistema si ya hay usuario autenticado
-            checkAuthState();
-        });
-
-        // Verificar estado de autenticación
-        function checkAuthState() {
-            // Por ahora, mostrar login directamente
-            // En producción, usarías firebase.auth().onAuthStateChanged
-            mostrarLogin();
-        }
-
-        // Manejar login
-        function handleLogin() {
-            const username = document.getElementById('loginUsername').value;
-            const password = document.getElementById('loginPassword').value;
-            
-            // Credenciales de prueba
-            if (username === 'admin' && password === 'admin') {
-                // En producción, usarías Firebase Auth
-                // auth.signInWithEmailAndPassword(email, password)
-                
-                // Por ahora, autenticación simple
-                mostrarSistema();
-            } else {
-                alert('Credenciales incorrectas. Usa admin/admin');
-            }
-        }
-
-        // Manejar logout
-        function handleLogout() {
-            if (confirm('¿Está seguro que desea cerrar sesión?')) {
-                // En producción, usarías auth.signOut()
-                mostrarLogin();
-            }
-        }
-
-        // Mostrar pantalla de login
-        function mostrarLogin() {
-            document.getElementById('loginScreen').style.display = 'flex';
-            document.getElementById('mainSystem').style.display = 'none';
-        }
-
-        // Mostrar sistema principal
-        function mostrarSistema() {
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('mainSystem').style.display = 'flex';
-            
-            // Inicializar sistema
             inicializarSistema();
             actualizarFechaHora();
             setInterval(actualizarFechaHora, 1000);
             
-            // Cargar datos desde Firebase
-            cargarDatosFirebase();
-        }
-
-        // Cargar datos desde Firebase
-        async function cargarDatosFirebase() {
-            try {
-                // Cargar registros
-                const registrosSnapshot = await db.collection('registros').orderBy('fecha', 'desc').get();
-                registros = [];
-                registrosSnapshot.forEach(doc => {
-                    const data = doc.data();
-                    registros.push({
-                        id: doc.id,
-                        ...data,
-                        litros: parseFloat(data.litros || 0),
-                        costoFlete: parseFloat(data.costoFlete || 0)
-                    });
-                });
-                
-                // Cargar centros de costo
-                const centrosSnapshot = await db.collection('centrosCosto').get();
-                if (!centrosSnapshot.empty) {
-                    centrosCosto = centrosSnapshot.docs.map(doc => doc.data().nombre);
-                }
-                
-                // Cargar personal MSO
-                const msoSnapshot = await db.collection('personalMSO').get();
-                if (!msoSnapshot.empty) {
-                    personalMSO = msoSnapshot.docs.map(doc => doc.data());
-                }
-                
-                // Actualizar interfaz
-                actualizarTablaRegistros();
-                cargarDepartamentosFiltros();
-                cargarCentrosCosto();
-                actualizarListaMSO();
-                actualizarEstadisticas();
-                
-            } catch (error) {
-                console.error('Error cargando datos:', error);
-                // Usar datos locales si hay error
-                actualizarTablaRegistros();
-                cargarDepartamentosFiltros();
-                cargarCentrosCosto();
-                actualizarListaMSO();
-                actualizarEstadisticas();
-            }
-        }
-
-        // Guardar registro en Firebase
-        async function guardarRegistroFirebase(registro) {
-            try {
-                // Remover id temporal para Firestore
-                const { id, ...registroData } = registro;
-                
-                // Agregar timestamp
-                registroData.timestamp = firebase.firestore.FieldValue.serverTimestamp();
-                registroData.usuario = 'admin'; // En producción, usar usuario actual
-                
-                const docRef = await db.collection('registros').add(registroData);
-                
-                // Actualizar registro con ID de Firestore
-                registro.id = docRef.id;
-                
-                return true;
-            } catch (error) {
-                console.error('Error guardando registro:', error);
-                return false;
-            }
-        }
-
-        // Actualizar registro en Firebase
-        async function actualizarRegistroFirebase(id, datos) {
-            try {
-                await db.collection('registros').doc(id).update(datos);
-                return true;
-            } catch (error) {
-                console.error('Error actualizando registro:', error);
-                return false;
-            }
-        }
-
-        // Eliminar registro de Firebase
-        async function eliminarRegistroFirebase(id) {
-            try {
-                await db.collection('registros').doc(id).delete();
-                return true;
-            } catch (error) {
-                console.error('Error eliminando registro:', error);
-                return false;
-            }
-        }
-
-        // =============================================
-        // FUNCIONES DEL SISTEMA (las mismas que antes)
-        // =============================================
-        function inicializarSistema() {
-            cargarDepartamentosFiltros();
-            cargarCentrosCosto();
-            cargarPersonalMSO();
-            actualizarListaMSO();
-            configurarEventos();
-            mostrarSeccion('registros');
-            actualizarTablaRegistros();
-            actualizarEstadisticas();
-            
-            document.getElementById('lastUpdate').textContent = new Date().toLocaleDateString();
-            
-            const ahora = new Date();
-            const fechaInput = document.getElementById('fecha');
-            fechaInput.value = ahora.toISOString().slice(0, 10);
-            
+            // Generar semanas, meses y años para reportes
             generarOpcionesFechaReporte();
+            
+            // Generar reporte inicial
             generarReporteSemanal();
+            
+            // Configurar eventos responsive
             configurarEventosResponsive();
-        }
+        });
 
+        // Configurar eventos responsive
         function configurarEventosResponsive() {
             window.addEventListener('resize', function() {
                 if (document.getElementById('reportes').classList.contains('active')) {
@@ -1695,15 +1661,51 @@
             });
         }
 
+        // Inicializar el sistema
+        function inicializarSistema() {
+            // Cargar departamentos en filtros
+            cargarDepartamentosFiltros();
+            
+            // Cargar centros de costo
+            cargarCentrosCosto();
+            
+            // Cargar MSO en el select
+            cargarPersonalMSO();
+            
+            // Cargar lista de MSO
+            actualizarListaMSO();
+            
+            // Configurar eventos
+            configurarEventos();
+            
+            // Mostrar la sección activa
+            mostrarSeccion('registros');
+            
+            // Actualizar la tabla
+            actualizarTablaRegistros();
+            
+            // Actualizar estadísticas
+            actualizarEstadisticas();
+            
+            // Actualizar fecha de última actualización
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleDateString();
+            
+            // Establecer fecha actual por defecto
+            const ahora = new Date();
+            const fechaInput = document.getElementById('fecha');
+            fechaInput.value = ahora.toISOString().slice(0, 10);
+        }
+
+        // Cargar departamentos en filtros
         function cargarDepartamentosFiltros() {
             const filterDept = document.getElementById('filterDept');
             const departamentoSelect = document.getElementById('departamento');
             
-            if (!filterDept || !departamentoSelect) return;
-            
+            // Limpiar selects
             filterDept.innerHTML = '<option value="">Todos los Departamentos</option>';
             departamentoSelect.innerHTML = '<option value="">Seleccione...</option>';
             
+            // Agregar departamentos
             departamentos.forEach(dept => {
                 const option1 = document.createElement('option');
                 option1.value = dept;
@@ -1717,14 +1719,15 @@
             });
         }
 
+        // Cargar centros de costo
         function cargarCentrosCosto() {
             const centroCostoSelect = document.getElementById('centroCosto');
             const newMsoCentroCostoSelect = document.getElementById('newMsoCentroCosto');
             
-            if (!centroCostoSelect) return;
-            
+            // Limpiar selects
             centroCostoSelect.innerHTML = '<option value="">Seleccione...</option>';
             
+            // Agregar centros de costo
             centrosCosto.forEach(centro => {
                 const option = document.createElement('option');
                 option.value = centro;
@@ -1732,6 +1735,7 @@
                 centroCostoSelect.appendChild(option);
             });
             
+            // También para el modal de MSO (solo centros de costo MSO)
             if (newMsoCentroCostoSelect) {
                 newMsoCentroCostoSelect.innerHTML = '';
                 const centrosMSO = centrosCosto.filter(centro => centro.includes('MSO'));
@@ -1744,6 +1748,105 @@
             }
         }
 
+        // Actualizar lista de centros de costo en el modal
+        function actualizarListaCentrosCostoModal() {
+            const listaContainer = document.getElementById('listaCentrosCosto');
+            
+            // Limpiar contenedor
+            listaContainer.innerHTML = '';
+            
+            // Agregar cada centro de costo
+            centrosCosto.forEach((centro, index) => {
+                const centroDiv = document.createElement('div');
+                centroDiv.className = 'centro-costo-item';
+                centroDiv.style.display = 'flex';
+                centroDiv.style.justifyContent = 'space-between';
+                centroDiv.style.alignItems = 'center';
+                centroDiv.style.padding = '8px';
+                centroDiv.style.borderBottom = '1px solid #eee';
+                
+                centroDiv.innerHTML = `
+                    <span>${centro}</span>
+                    <button type="button" class="btn-action btn-delete eliminar-centro-costo" data-index="${index}" style="padding: 2px 6px;">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                `;
+                
+                listaContainer.appendChild(centroDiv);
+            });
+            
+            // Agregar eventos a los botones de eliminar
+            document.querySelectorAll('.eliminar-centro-costo').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const index = parseInt(this.getAttribute('data-index'));
+                    eliminarCentroCosto(index);
+                });
+            });
+        }
+
+        // Agregar nuevo centro de costo
+        function agregarCentroCosto() {
+            const nuevoCentro = document.getElementById('nuevoCentroCosto').value.trim();
+            
+            if (!nuevoCentro) {
+                alert('Por favor ingrese un nombre para el centro de costo');
+                return;
+            }
+            
+            // Verificar si ya existe
+            if (centrosCosto.includes(nuevoCentro)) {
+                alert('Este centro de costo ya existe');
+                return;
+            }
+            
+            // Agregar al array
+            centrosCosto.push(nuevoCentro);
+            
+            // También agregar al array de departamentos si no existe
+            const nombreDept = nuevoCentro.replace('C.O ', '').replace('Departamento ', '');
+            if (!departamentos.includes(nombreDept) && !nuevoCentro.includes('MSO')) {
+                departamentos.push(nombreDept);
+            }
+            
+            // Actualizar interfaz
+            actualizarListaCentrosCostoModal();
+            cargarCentrosCosto();
+            cargarDepartamentosFiltros();
+            
+            // Limpiar input
+            document.getElementById('nuevoCentroCosto').value = '';
+            
+            // Mostrar mensaje
+            alert('Centro de costo agregado exitosamente');
+        }
+
+        // Eliminar centro de costo
+        function eliminarCentroCosto(index) {
+            if (index < 0 || index >= centrosCosto.length) return;
+            
+            const centroAEliminar = centrosCosto[index];
+            
+            // Verificar si hay registros usando este centro de costo
+            const registrosConEsteCentro = registros.filter(r => r.centroCosto === centroAEliminar);
+            
+            if (registrosConEsteCentro.length > 0) {
+                alert(`No se puede eliminar este centro de costo porque hay ${registrosConEsteCentro.length} registro(s) asociado(s). Elimine primero los registros.`);
+                return;
+            }
+            
+            // Eliminar del array
+            centrosCosto.splice(index, 1);
+            
+            // Actualizar interfaz
+            actualizarListaCentrosCostoModal();
+            cargarCentrosCosto();
+            cargarDepartamentosFiltros();
+            
+            // Mostrar mensaje
+            alert('Centro de costo eliminado exitosamente');
+        }
+
+        // Configurar eventos - CORREGIDO
         function configurarEventos() {
             // Navegación del menú
             document.querySelectorAll('.menu-btn').forEach(btn => {
@@ -1751,9 +1854,11 @@
                     const section = this.getAttribute('data-section');
                     mostrarSeccion(section);
                     
+                    // Actualizar clase activa
                     document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
                     this.classList.add('active');
                     
+                    // Si es la sección de reportes, actualizar gráficos
                     if (section === 'reportes') {
                         setTimeout(() => {
                             const reportType = document.getElementById('reportType').value;
@@ -1767,6 +1872,7 @@
                         }, 100);
                     }
                     
+                    // Si es la sección de supervisores, actualizar tabla
                     if (section === 'supervisores') {
                         setTimeout(() => {
                             actualizarTablaSupervisores();
@@ -1776,10 +1882,7 @@
             });
             
             // Formulario de nuevo registro
-            document.getElementById('nuevoRegistroForm').addEventListener('submit', async function(e) {
-                e.preventDefault();
-                await guardarRegistro(e);
-            });
+            document.getElementById('nuevoRegistroForm').addEventListener('submit', guardarRegistro);
             
             // Botón cancelar
             document.getElementById('cancelBtn').addEventListener('click', function() {
@@ -1790,6 +1893,7 @@
             
             // Botón reset (limpiar)
             document.getElementById('resetBtn').addEventListener('click', function() {
+                // Limpiar campos específicos
                 document.getElementById('nombreApellidoGroup').style.display = 'none';
                 document.getElementById('tipoMsoGroup').style.display = 'none';
                 document.getElementById('costoFleteGroup').style.display = 'none';
@@ -1807,10 +1911,7 @@
             document.getElementById('filterDate').addEventListener('change', actualizarTablaRegistros);
             
             // Búsqueda de supervisores
-            const searchSupervisor = document.getElementById('searchSupervisor');
-            if (searchSupervisor) {
-                searchSupervisor.addEventListener('input', actualizarTablaSupervisores);
-            }
+            document.getElementById('searchSupervisor').addEventListener('input', actualizarTablaSupervisores);
             
             // Tipo de reporte
             document.getElementById('reportType').addEventListener('change', function() {
@@ -1832,7 +1933,7 @@
                 }
             });
             
-            // Departamento change event
+            // Departamento change event (para mostrar/ocultar campos de nombre y tipo MSO)
             document.getElementById('departamento').addEventListener('change', function() {
                 const departamento = this.value;
                 const nombreApellidoGroup = document.getElementById('nombreApellidoGroup');
@@ -1842,18 +1943,22 @@
                 const tipoCombustibleSelect = document.getElementById('tipoCombustible');
                 const centroCostoSelect = document.getElementById('centroCosto');
                 
+                // Mostrar campo de nombre y apellido para cualquier departamento seleccionado
                 if (departamento) {
                     nombreApellidoGroup.style.display = 'block';
                     nombreApellidoInput.required = true;
                     
+                    // Si es MSO, mostrar select para tipo de MSO
                     if (departamento === 'MSO') {
                         tipoMsoGroup.style.display = 'block';
                         tipoMsoSelect.required = true;
                         nombreApellidoInput.placeholder = "Ej: Anibal Loyato";
                         
+                        // Para MSO, tipo de combustible debe ser gasolina
                         tipoCombustibleSelect.value = 'gasolina';
                         tipoCombustibleSelect.disabled = true;
                         
+                        // Establecer centro de costo como MSO automáticamente
                         centroCostoSelect.value = 'MSO';
                         centroCostoSelect.disabled = true;
                     } else {
@@ -1861,9 +1966,13 @@
                         tipoMsoSelect.required = false;
                         nombreApellidoInput.placeholder = "Ej: Juan Pérez (Supervisor)";
                         
+                        // Habilitar tipo de combustible
                         tipoCombustibleSelect.disabled = false;
+                        
+                        // Habilitar centro de costo
                         centroCostoSelect.disabled = false;
                         
+                        // Sincronizar departamento con centro de costo
                         let centroCostoCorrespondiente = '';
                         
                         if (departamento === 'Los Ruices') {
@@ -1880,15 +1989,18 @@
                             centroCostoCorrespondiente = departamento;
                         }
                         
+                        // Verificar si existe en la lista de centros de costo
                         const existe = Array.from(centroCostoSelect.options).some(option => option.value === centroCostoCorrespondiente);
                         
                         if (existe) {
                             centroCostoSelect.value = centroCostoCorrespondiente;
                         } else {
+                            // Si no existe, dejar en blanco
                             centroCostoSelect.value = '';
                         }
                     }
                 } else {
+                    // Si no hay departamento seleccionado, ocultar todo
                     nombreApellidoGroup.style.display = 'none';
                     tipoMsoGroup.style.display = 'none';
                     nombreApellidoInput.required = false;
@@ -1913,47 +2025,48 @@
             const placaInput = document.getElementById('placa');
             const placaResults = document.getElementById('placaResults');
             
-            if (placaInput && placaResults) {
-                placaInput.addEventListener('input', function() {
-                    const query = this.value.toUpperCase();
-                    if (query.length < 1) {
-                        placaResults.style.display = 'none';
-                        return;
-                    }
+            placaInput.addEventListener('input', function() {
+                const query = this.value.toUpperCase();
+                if (query.length < 1) {
+                    placaResults.style.display = 'none';
+                    return;
+                }
+                
+                const filtered = vehiculos.filter(v => v.placa.includes(query));
+                mostrarAutocompletadoPlaca(placaResults, filtered, query);
+                
+                // Si hay un vehículo exacto, cargar su departamento
+                const vehiculoExacto = vehiculos.find(v => v.placa === query);
+                if (vehiculoExacto) {
+                    // Si el departamento no está definido, usar el del vehículo
+                    const departamentoSelect = document.getElementById('departamento');
+                    const centroCostoSelect = document.getElementById('centroCosto');
                     
-                    const filtered = vehiculos.filter(v => v.placa.includes(query));
-                    mostrarAutocompletadoPlaca(placaResults, filtered, query);
-                    
-                    const vehiculoExacto = vehiculos.find(v => v.placa === query);
-                    if (vehiculoExacto) {
-                        const departamentoSelect = document.getElementById('departamento');
-                        const centroCostoSelect = document.getElementById('centroCosto');
+                    if (departamentoSelect.value === '' && departamentos.includes(vehiculoExacto.departamento)) {
+                        departamentoSelect.value = vehiculoExacto.departamento;
                         
-                        if (departamentoSelect.value === '' && departamentos.includes(vehiculoExacto.departamento)) {
-                            departamentoSelect.value = vehiculoExacto.departamento;
-                            
-                            let centroCostoCorrespondiente = '';
-                            if (vehiculoExacto.departamento === 'Los Ruices') {
-                                centroCostoCorrespondiente = 'C.O Los Ruices';
-                            } else if (vehiculoExacto.departamento === 'El Rosal') {
-                                centroCostoCorrespondiente = 'C.O El Rosal';
-                            } else if (vehiculoExacto.departamento === 'La Naya') {
-                                centroCostoCorrespondiente = 'C.O La Naya';
-                            } else if (vehiculoExacto.departamento === 'El Paraiso') {
-                                centroCostoCorrespondiente = 'C.O El Paraiso';
-                            } else if (vehiculoExacto.departamento === 'Comerciales') {
-                                centroCostoCorrespondiente = 'Departamento Comercial';
-                            } else {
-                                centroCostoCorrespondiente = vehiculoExacto.departamento;
-                            }
-                            
-                            if (centrosCosto.includes(centroCostoCorrespondiente)) {
-                                centroCostoSelect.value = centroCostoCorrespondiente;
-                            }
+                        // También establecer el centro de costo correspondiente
+                        let centroCostoCorrespondiente = '';
+                        if (vehiculoExacto.departamento === 'Los Ruices') {
+                            centroCostoCorrespondiente = 'C.O Los Ruices';
+                        } else if (vehiculoExacto.departamento === 'El Rosal') {
+                            centroCostoCorrespondiente = 'C.O El Rosal';
+                        } else if (vehiculoExacto.departamento === 'La Naya') {
+                            centroCostoCorrespondiente = 'C.O La Naya';
+                        } else if (vehiculoExacto.departamento === 'El Paraiso') {
+                            centroCostoCorrespondiente = 'C.O El Paraiso';
+                        } else if (vehiculoExacto.departamento === 'Comerciales') {
+                            centroCostoCorrespondiente = 'Departamento Comercial';
+                        } else {
+                            centroCostoCorrespondiente = vehiculoExacto.departamento;
+                        }
+                        
+                        if (centrosCosto.includes(centroCostoCorrespondiente)) {
+                            centroCostoSelect.value = centroCostoCorrespondiente;
                         }
                     }
-                });
-            }
+                }
+            });
             
             // Botones de exportación
             document.getElementById('exportPdf').addEventListener('click', exportarPDF);
@@ -1970,40 +2083,44 @@
             
             // Cerrar modal al hacer clic fuera
             window.addEventListener('click', function(event) {
-                const modals = ['editModal', 'confirmModal', 'msoModal', 'centrosCostoModal'];
-                modals.forEach(modalId => {
-                    const modal = document.getElementById(modalId);
-                    if (modal && event.target === modal) {
-                        cerrarModal();
-                    }
-                });
+                const editModal = document.getElementById('editModal');
+                const confirmModal = document.getElementById('confirmModal');
+                const msoModal = document.getElementById('msoModal');
+                const centrosCostoModal = document.getElementById('centrosCostoModal');
+                
+                if (event.target === editModal) {
+                    cerrarModal();
+                }
+                
+                if (event.target === confirmModal) {
+                    cerrarModal();
+                }
+                
+                if (event.target === msoModal) {
+                    cerrarModal();
+                }
+                
+                if (event.target === centrosCostoModal) {
+                    cerrarModal();
+                }
             });
             
             // Agregar personal MSO
-            const addMsoBtn = document.getElementById('addMsoBtn');
-            if (addMsoBtn) {
-                addMsoBtn.addEventListener('click', function() {
-                    document.getElementById('msoModal').style.display = 'flex';
-                });
-            }
+            document.getElementById('addMsoBtn').addEventListener('click', function() {
+                document.getElementById('msoModal').style.display = 'flex';
+            });
             
             // Formulario para agregar MSO
-            const msoForm = document.getElementById('msoForm');
-            if (msoForm) {
-                msoForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    agregarPersonalMSO();
-                });
-            }
+            document.getElementById('msoForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                agregarPersonalMSO();
+            });
             
             // Cancelar agregar MSO
-            const cancelMsoBtn = document.getElementById('cancelMsoBtn');
-            if (cancelMsoBtn) {
-                cancelMsoBtn.addEventListener('click', function() {
-                    document.getElementById('msoModal').style.display = 'none';
-                    document.getElementById('msoForm').reset();
-                });
-            }
+            document.getElementById('cancelMsoBtn').addEventListener('click', function() {
+                document.getElementById('msoModal').style.display = 'none';
+                document.getElementById('msoForm').reset();
+            });
             
             // Generar reporte
             document.getElementById('generateReport').addEventListener('click', function() {
@@ -2018,127 +2135,49 @@
             });
             
             // Gestionar centros de costo
-            const editCentrosCostoBtn = document.getElementById('editCentrosCostoBtn');
-            if (editCentrosCostoBtn) {
-                editCentrosCostoBtn.addEventListener('click', function() {
-                    actualizarListaCentrosCostoModal();
-                    document.getElementById('centrosCostoModal').style.display = 'flex';
-                });
-            }
+            document.getElementById('editCentrosCostoBtn').addEventListener('click', function() {
+                actualizarListaCentrosCostoModal();
+                document.getElementById('centrosCostoModal').style.display = 'flex';
+            });
             
             // Agregar nuevo centro de costo
-            const agregarCentroCostoBtn = document.getElementById('agregarCentroCostoBtn');
-            if (agregarCentroCostoBtn) {
-                agregarCentroCostoBtn.addEventListener('click', agregarCentroCosto);
-            }
+            document.getElementById('agregarCentroCostoBtn').addEventListener('click', agregarCentroCosto);
             
             // Guardar cambios centros de costo
-            const guardarCentrosCostoBtn = document.getElementById('guardarCentrosCostoBtn');
-            if (guardarCentrosCostoBtn) {
-                guardarCentrosCostoBtn.addEventListener('click', function() {
-                    document.getElementById('centrosCostoModal').style.display = 'none';
-                    alert('Centros de costo actualizados exitosamente');
-                });
-            }
+            document.getElementById('guardarCentrosCostoBtn').addEventListener('click', function() {
+                document.getElementById('centrosCostoModal').style.display = 'none';
+                alert('Centros de costo actualizados exitosamente');
+            });
             
             // Cancelar centros de costo
-            const cancelarCentrosCostoBtn = document.getElementById('cancelarCentrosCostoBtn');
-            if (cancelarCentrosCostoBtn) {
-                cancelarCentrosCostoBtn.addEventListener('click', function() {
-                    document.getElementById('centrosCostoModal').style.display = 'none';
-                });
-            }
+            document.getElementById('cancelarCentrosCostoBtn').addEventListener('click', function() {
+                document.getElementById('centrosCostoModal').style.display = 'none';
+            });
         }
 
-        async function guardarRegistro(e) {
-            e.preventDefault();
+        // Mostrar sección específica
+        function mostrarSeccion(sectionId) {
+            // Ocultar todas las secciones
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
             
-            const departamento = document.getElementById('departamento').value;
-            const nombreApellido = document.getElementById('nombreApellido').value.trim().toUpperCase();
-            
-            if (!nombreApellido) {
-                alert('Por favor ingrese el nombre y apellido del solicitante');
-                return;
+            // Mostrar la sección seleccionada
+            const seccion = document.getElementById(sectionId);
+            if (seccion) {
+                seccion.classList.add('active');
             }
             
-            let tipoMso = '';
-            if (departamento === 'MSO') {
-                tipoMso = document.getElementById('tipoMso').value;
-                if (!tipoMso) {
-                    alert('Por favor seleccione el tipo de Personal MSO');
-                    return;
+            // Actualizar el menú activo
+            document.querySelectorAll('.menu-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.getAttribute('data-section') === sectionId) {
+                    btn.classList.add('active');
                 }
-            }
-            
-            const placa = document.getElementById('placa').value.toUpperCase();
-            const vehiculo = vehiculos.find(v => v.placa === placa);
-            
-            if (!vehiculo) {
-                if (!confirm('Esta placa no está registrada en el sistema. ¿Desea continuar de todos modos?')) {
-                    return;
-                }
-            }
-            
-            const centroCosto = document.getElementById('centroCosto').value;
-            if (!centrosCosto.includes(centroCosto)) {
-                alert('Por favor seleccione un centro de costo válido');
-                return;
-            }
-            
-            let costoFlete = 0;
-            const tipoCombustible = document.getElementById('tipoCombustible').value;
-            if (tipoCombustible === 'gasoil') {
-                costoFlete = parseFloat(document.getElementById('costoFlete').value) || 0;
-            }
-            
-            const nuevoRegistro = {
-                numeroOrden: document.getElementById('numeroOrden').value,
-                fecha: document.getElementById('fecha').value,
-                placa: placa,
-                departamento: departamento,
-                centroCosto: centroCosto,
-                supervisor: nombreApellido,
-                tipoCombustible: tipoCombustible,
-                litros: parseFloat(document.getElementById('litros').value),
-                costoFlete: costoFlete,
-                observaciones: document.getElementById('observaciones').value,
-                tipoPersonal: departamento === 'MSO' ? 'mso' : 'supervisor',
-                tipoMso: tipoMso
-            };
-            
-            // Guardar en Firebase
-            const success = await guardarRegistroFirebase(nuevoRegistro);
-            
-            if (success) {
-                // Agregar localmente con ID de Firestore
-                registros.push({ id: nuevoRegistro.id || nextId++, ...nuevoRegistro });
-                
-                // Actualizar interfaz
-                actualizarTablaRegistros();
-                actualizarEstadisticas();
-                actualizarTablaSupervisores();
-                
-                alert('Registro guardado exitosamente');
-                
-                // Limpiar formulario
-                document.getElementById('nuevoRegistroForm').reset();
-                
-                const ahora = new Date();
-                document.getElementById('fecha').value = ahora.toISOString().slice(0, 10);
-                document.getElementById('tipoCombustible').disabled = false;
-                document.getElementById('centroCosto').disabled = false;
-                document.getElementById('costoFleteGroup').style.display = 'none';
-                document.getElementById('nombreApellidoGroup').style.display = 'none';
-                document.getElementById('tipoMsoGroup').style.display = 'none';
-                
-                mostrarSeccion('registros');
-                document.querySelector('[data-section="registros"]').classList.add('active');
-                document.querySelector('[data-section="nuevo"]').classList.remove('active');
-            } else {
-                alert('Error al guardar el registro. Intente nuevamente.');
-            }
+            });
         }
 
+        // Actualizar fecha y hora actual
         function actualizarFechaHora() {
             const now = new Date();
             const options = { 
@@ -2154,13 +2193,1717 @@
             }
         }
 
-        // Las demás funciones (actualizarTablaRegistros, actualizarEstadisticas, etc.)
-        // permanecen igual que en el código anterior...
+        // Generar opciones de fecha para reportes
+        function generarOpcionesFechaReporte() {
+            const weekSelect = document.getElementById('reportWeek');
+            const monthSelect = document.getElementById('reportMonth');
+            const yearSelect = document.getElementById('reportYear');
+            
+            if (!weekSelect || !monthSelect || !yearSelect) return;
+            
+            // Generar semanas del año actual
+            const currentDate = new Date();
+            const currentYear = currentDate.getFullYear();
+            const currentWeek = getWeekNumber(currentDate);
+            
+            // Generar 52 semanas
+            for (let week = 1; week <= 52; week++) {
+                const option = document.createElement('option');
+                option.value = week;
+                const weekDates = getWeekDates(currentYear, week);
+                option.textContent = `Semana ${week} (${weekDates.start.toLocaleDateString('es-ES', {day: '2-digit', month: '2-digit'})} - ${weekDates.end.toLocaleDateString('es-ES', {day: '2-digit', month: '2-digit'})})`;
+                if (week === currentWeek) {
+                    option.selected = true;
+                }
+                weekSelect.appendChild(option);
+            }
+            
+            // Generar meses
+            const meses = [
+                'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+            ];
+            
+            meses.forEach((mes, index) => {
+                const option = document.createElement('option');
+                option.value = index + 1;
+                option.textContent = mes;
+                if (index + 1 === currentDate.getMonth() + 1) {
+                    option.selected = true;
+                }
+                monthSelect.appendChild(option);
+            });
+            
+            // Generar años (desde 2025 hasta el año en curso + 2 años futuros)
+            const currentYearNow = currentDate.getFullYear();
+            const startYear = 2025;
+            const endYear = currentYearNow + 2; // Año actual + 2 años futuros
+            
+            for (let year = startYear; year <= endYear; year++) {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                if (year === currentYearNow) {
+                    option.selected = true;
+                }
+                yearSelect.appendChild(option);
+            }
+        }
 
-        // NOTA: Por razones de espacio, no copié todas las funciones de nuevo
-        // Pero debes mantenerlas como estaban en tu código original
-        // Solo asegúrate de que todas las funciones estén definidas
+        // Función para obtener el número de semana
+        function getWeekNumber(date) {
+            const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
+            const pastDaysOfYear = (date - firstDayOfYear) / 86400000;
+            return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+        }
 
+        // Función para obtener fechas de inicio y fin de una semana
+        function getWeekDates(year, week) {
+            const simple = new Date(year, 0, 1 + (week - 1) * 7);
+            const dow = simple.getDay();
+            const weekStart = simple;
+            if (dow <= 4)
+                weekStart.setDate(simple.getDate() - simple.getDay() + 1);
+            else
+                weekStart.setDate(simple.getDate() + 8 - simple.getDay());
+            
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekEnd.getDate() + 6);
+            
+            return {
+                start: weekStart,
+                end: weekEnd
+            };
+        }
+
+        // Cargar personal MSO en el select
+        function cargarPersonalMSO() {
+            // Esta función ya no es necesaria para el formulario principal
+            // pero se mantiene para el formulario de edición si es necesario
+        }
+
+        // Actualizar lista de MSO en la interfaz
+        function actualizarListaMSO() {
+            const msoListContainer = document.getElementById('msoListContainer');
+            
+            if (!msoListContainer) return;
+            
+            // Limpiar contenedor
+            msoListContainer.innerHTML = '';
+            
+            // Agregar cada persona MSO
+            personalMSO.forEach(persona => {
+                const msoCard = document.createElement('div');
+                msoCard.className = 'mso-card';
+                msoCard.innerHTML = `
+                    <div class="mso-header">
+                        <i class="fas fa-user-tie"></i>
+                        <h4>${persona.nombre}</h4>
+                        <span class="mso-badge">${persona.centroCosto}</span>
+                    </div>
+                    <p><strong>Cargo:</strong> ${persona.cargo}</p>
+                    <p><strong>Vehículo asignado:</strong> ${persona.placa}</p>
+                    <p><strong>Centro de Costo:</strong> ${persona.centroCosto}</p>
+                    <p>Personal autorizado para solicitud de tickets de gasolina</p>
+                `;
+                msoListContainer.appendChild(msoCard);
+            });
+        }
+
+        // Agregar nuevo personal MSO
+        function agregarPersonalMSO() {
+            const nombre = document.getElementById('newMsoNombre').value.trim();
+            const cargo = document.getElementById('newMsoCargo').value.trim();
+            const placa = document.getElementById('newMsoPlaca').value.trim().toUpperCase();
+            const centroCosto = document.getElementById('newMsoCentroCosto').value;
+            
+            if (!nombre || !cargo || !placa || !centroCosto) {
+                alert('Por favor complete todos los campos');
+                return;
+            }
+            
+            // Verificar si ya existe
+            const existe = personalMSO.some(p => p.nombre.toLowerCase() === nombre.toLowerCase());
+            if (existe) {
+                alert('Esta persona ya está registrada como personal MSO');
+                return;
+            }
+            
+            // Verificar si la placa ya está asignada a otro MSO
+            const placaAsignada = personalMSO.some(p => p.placa === placa);
+            if (placaAsignada) {
+                alert('Esta placa ya está asignada a otro personal MSO');
+                return;
+            }
+            
+            // Agregar nuevo MSO
+            personalMSO.push({ nombre, cargo, placa, centroCosto });
+            
+            // Actualizar interfaz
+            cargarPersonalMSO();
+            actualizarListaMSO();
+            
+            // Cerrar modal y limpiar formulario
+            document.getElementById('msoModal').style.display = 'none';
+            document.getElementById('msoForm').reset();
+            
+            alert('Personal MSO agregado exitosamente');
+        }
+
+        // Mostrar autocompletado para supervisores
+        function mostrarAutocompletado(container, resultados, query) {
+            container.innerHTML = '';
+            
+            if (resultados.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+            
+            resultados.forEach(resultado => {
+                const div = document.createElement('div');
+                div.className = 'autocomplete-result';
+                div.textContent = resultado;
+                div.addEventListener('click', function() {
+                    document.getElementById('supervisor').value = resultado;
+                    container.style.display = 'none';
+                });
+                container.appendChild(div);
+            });
+            
+            container.style.display = 'block';
+        }
+
+        // Mostrar autocompletado para placas
+        function mostrarAutocompletadoPlaca(container, resultados, query) {
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            if (resultados.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+            
+            resultados.forEach(vehiculo => {
+                const div = document.createElement('div');
+                div.className = 'autocomplete-result';
+                div.innerHTML = `
+                    <div><strong>${vehiculo.placa}</strong></div>
+                    <div style="font-size: 0.8em; color: #666;">
+                        ${vehiculo.departamento} - ${vehiculo.capacidad}L
+                    </div>
+                `;
+                div.addEventListener('click', function() {
+                    const placaInput = document.getElementById('placa');
+                    if (placaInput) {
+                        placaInput.value = vehiculo.placa;
+                    }
+                    
+                    // Si el departamento no está definido, usar el del vehículo
+                    const departamentoSelect = document.getElementById('departamento');
+                    const centroCostoSelect = document.getElementById('centroCosto');
+                    
+                    if (departamentoSelect && departamentoSelect.value === '' && departamentos.includes(vehiculo.departamento)) {
+                        departamentoSelect.value = vehiculo.departamento;
+                        
+                        // También establecer el centro de costo correspondiente
+                        let centroCostoCorrespondiente = '';
+                        if (vehiculo.departamento === 'Los Ruices') {
+                            centroCostoCorrespondiente = 'C.O Los Ruices';
+                        } else if (vehiculo.departamento === 'El Rosal') {
+                            centroCostoCorrespondiente = 'C.O El Rosal';
+                        } else if (vehiculo.departamento === 'La Naya') {
+                            centroCostoCorrespondiente = 'C.O La Naya';
+                        } else if (vehiculo.departamento === 'El Paraiso') {
+                            centroCostoCorrespondiente = 'C.O El Paraiso';
+                        } else if (vehiculo.departamento === 'Comerciales') {
+                            centroCostoCorrespondiente = 'Departamento Comercial';
+                        } else {
+                            centroCostoCorrespondiente = vehiculo.departamento;
+                        }
+                        
+                        if (centroCostoSelect && centrosCosto.includes(centroCostoCorrespondiente)) {
+                            centroCostoSelect.value = centroCostoCorrespondiente;
+                        }
+                    }
+                    
+                    container.style.display = 'none';
+                });
+                container.appendChild(div);
+            });
+            
+            container.style.display = 'block';
+        }
+
+        // Guardar nuevo registro
+        function guardarRegistro(e) {
+            e.preventDefault();
+            
+            // Obtener valores del formulario
+            const departamento = document.getElementById('departamento').value;
+            const nombreApellido = document.getElementById('nombreApellido').value.trim().toUpperCase();
+            
+            if (!nombreApellido) {
+                alert('Por favor ingrese el nombre y apellido del solicitante');
+                return;
+            }
+            
+            // Obtener tipo de MSO si el departamento es MSO
+            let tipoMso = '';
+            if (departamento === 'MSO') {
+                tipoMso = document.getElementById('tipoMso').value;
+                if (!tipoMso) {
+                    alert('Por favor seleccione el tipo de Personal MSO');
+                    return;
+                }
+            }
+            
+            // Validar que la placa esté en la lista de vehículos
+            const placa = document.getElementById('placa').value.toUpperCase();
+            const vehiculo = vehiculos.find(v => v.placa === placa);
+            
+            if (!vehiculo) {
+                if (!confirm('Esta placa no está registrada en el sistema. ¿Desea continuar de todos modos?')) {
+                    return;
+                }
+            }
+            
+            // Validar centro de costo
+            const centroCosto = document.getElementById('centroCosto').value;
+            if (!centrosCosto.includes(centroCosto)) {
+                alert('Por favor seleccione un centro de costo válido');
+                return;
+            }
+            
+            // Obtener costo flete (solo para gasoil)
+            let costoFlete = 0;
+            const tipoCombustible = document.getElementById('tipoCombustible').value;
+            if (tipoCombustible === 'gasoil') {
+                costoFlete = parseFloat(document.getElementById('costoFlete').value) || 0;
+            }
+            
+            // Crear nuevo registro
+            const nuevoRegistro = {
+                id: nextId++,
+                numeroOrden: document.getElementById('numeroOrden').value,
+                fecha: document.getElementById('fecha').value,
+                placa: placa,
+                departamento: departamento,
+                centroCosto: centroCosto,
+                supervisor: nombreApellido,
+                tipoCombustible: tipoCombustible,
+                litros: parseFloat(document.getElementById('litros').value),
+                costoFlete: costoFlete,
+                observaciones: document.getElementById('observaciones').value,
+                tipoPersonal: departamento === 'MSO' ? 'mso' : 'supervisor',
+                tipoMso: tipoMso
+            };
+            
+            // Agregar a la lista de registros
+            registros.push(nuevoRegistro);
+            
+            // Actualizar interfaz
+            actualizarTablaRegistros();
+            actualizarEstadisticas();
+            actualizarTablaSupervisores();
+            
+            // Mostrar mensaje de éxito
+            alert('Registro guardado exitosamente');
+            
+            // Limpiar formulario
+            document.getElementById('nuevoRegistroForm').reset();
+            
+            // Establecer fecha actual
+            const ahora = new Date();
+            document.getElementById('fecha').value = ahora.toISOString().slice(0, 10);
+            
+            // Habilitar tipo de combustible si estaba deshabilitado
+            document.getElementById('tipoCombustible').disabled = false;
+            
+            // Habilitar centro de costo si estaba deshabilitado
+            document.getElementById('centroCosto').disabled = false;
+            
+            // Ocultar costo flete
+            document.getElementById('costoFleteGroup').style.display = 'none';
+            
+            // Ocultar campos de nombre y tipo MSO
+            document.getElementById('nombreApellidoGroup').style.display = 'none';
+            document.getElementById('tipoMsoGroup').style.display = 'none';
+            
+            // Regresar a la sección de registros
+            mostrarSeccion('registros');
+            document.querySelector('[data-section="registros"]').classList.add('active');
+            document.querySelector('[data-section="nuevo"]').classList.remove('active');
+        }
+
+        // Actualizar tabla de registros
+        function actualizarTablaRegistros() {
+            const tableBody = document.getElementById('registrosTableBody');
+            if (!tableBody) return;
+            
+            const filterSupervisor = document.getElementById('filterSupervisor') ? document.getElementById('filterSupervisor').value.toLowerCase() : '';
+            const filterDept = document.getElementById('filterDept') ? document.getElementById('filterDept').value : '';
+            const filterPlaca = document.getElementById('filterPlaca') ? document.getElementById('filterPlaca').value.toLowerCase() : '';
+            const filterDate = document.getElementById('filterDate') ? document.getElementById('filterDate').value : '';
+            
+            // Filtrar registros
+            let registrosFiltrados = registros.filter(registro => {
+                // Filtro por supervisor
+                const supervisorMatch = filterSupervisor === '' || 
+                    registro.supervisor.toLowerCase().includes(filterSupervisor);
+                
+                // Filtro por departamento
+                const deptMatch = filterDept === '' || registro.departamento === filterDept;
+                
+                // Filtro por placa
+                const placaMatch = filterPlaca === '' || registro.placa.toLowerCase().includes(filterPlaca);
+                
+                // Filtro por fecha
+                let dateMatch = true;
+                if (filterDate) {
+                    dateMatch = registro.fecha === filterDate;
+                }
+                
+                return supervisorMatch && deptMatch && placaMatch && dateMatch;
+            });
+            
+            // Ordenar por fecha más reciente primero
+            registrosFiltrados.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+            
+            // Limpiar tabla
+            tableBody.innerHTML = '';
+            
+            // Llenar tabla
+            registrosFiltrados.forEach(registro => {
+                const row = document.createElement('tr');
+                
+                // Formatear fecha
+                const fecha = new Date(registro.fecha);
+                const fechaFormateada = fecha.toLocaleDateString('es-ES');
+                
+                // Calcular costo
+                let costo = 0;
+                if (registro.tipoCombustible === 'gasolina') {
+                    costo = registro.litros * PRECIOS.gasolina;
+                } else {
+                    costo = (registro.litros * PRECIOS.gasoil) + (registro.costoFlete || 0);
+                }
+                
+                // Determinar el texto para mostrar en la columna supervisor
+                let supervisorTexto = registro.supervisor;
+                if (registro.tipoPersonal === 'mso') {
+                    if (registro.tipoMso) {
+                        supervisorTexto = `${registro.supervisor} <span class="mso-badge">${registro.tipoMso}</span>`;
+                    } else {
+                        supervisorTexto = `${registro.supervisor} <span class="mso-badge">MSO</span>`;
+                    }
+                }
+                
+                row.innerHTML = `
+                    <td>${registro.numeroOrden}</td>
+                    <td>${fechaFormateada}</td>
+                    <td>${registro.placa}</td>
+                    <td>${registro.departamento}</td>
+                    <td>${registro.centroCosto}</td>
+                    <td>${supervisorTexto}</td>
+                    <td>${registro.tipoCombustible.charAt(0).toUpperCase() + registro.tipoCombustible.slice(1)}</td>
+                    <td>${registro.litros.toFixed(2)} <span class="cost-badge">$${costo.toFixed(2)}</span></td>
+                    <td>${registro.tipoCombustible === 'gasoil' && registro.costoFlete > 0 ? `$${registro.costoFlete.toFixed(2)}` : '-'}</td>
+                    <td>${registro.observaciones || '-'}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-action btn-edit" data-id="${registro.id}">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                            <button class="btn-action btn-delete" data-id="${registro.id}">
+                                <i class="fas fa-trash"></i> Eliminar
+                            </button>
+                        </div>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+            
+            // Agregar eventos a los botones de acción
+            document.querySelectorAll('.btn-edit').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = parseInt(this.getAttribute('data-id'));
+                    editarRegistro(id);
+                });
+            });
+            
+            document.querySelectorAll('.btn-delete').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = parseInt(this.getAttribute('data-id'));
+                    confirmarEliminacion(id);
+                });
+            });
+            
+            // Actualizar contador
+            const totalRecordsElement = document.getElementById('totalRecords');
+            if (totalRecordsElement) {
+                totalRecordsElement.textContent = registrosFiltrados.length;
+            }
+            
+            // Actualizar último número de orden
+            const lastOrderElement = document.getElementById('lastOrder');
+            if (lastOrderElement && registrosFiltrados.length > 0) {
+                const lastOrder = registrosFiltrados[0].numeroOrden;
+                lastOrderElement.textContent = lastOrder;
+            }
+        }
+
+        // Actualizar tabla de supervisores
+        function actualizarTablaSupervisores() {
+            const tableBody = document.getElementById('supervisorsTableBody');
+            if (!tableBody) return;
+            
+            const searchElement = document.getElementById('searchSupervisor');
+            const searchTerm = searchElement ? searchElement.value.toUpperCase() : '';
+            
+            // Limpiar tabla
+            tableBody.innerHTML = '';
+            
+            // Obtener supervisores únicos de los registros
+            const supervisoresRegistrados = [...new Set(registros.map(r => r.supervisor))];
+            
+            // Filtrar supervisores
+            let supervisoresFiltrados = supervisoresRegistrados.filter(supervisor => 
+                supervisor.toUpperCase().includes(searchTerm)
+            );
+            
+            // Llenar tabla
+            supervisoresFiltrados.forEach(supervisor => {
+                // Obtener registros de este supervisor
+                const registrosSupervisor = registros.filter(r => r.supervisor === supervisor);
+                
+                // Contar vehículos asignados (placas únicas para este supervisor)
+                const vehiculosAsignados = [...new Set(registrosSupervisor.map(r => r.placa))];
+                
+                // Obtener departamento más común
+                const departamentosCount = {};
+                registrosSupervisor.forEach(r => {
+                    departamentosCount[r.departamento] = (departamentosCount[r.departamento] || 0) + 1;
+                });
+                const departamentoPrincipal = Object.keys(departamentosCount).reduce((a, b) => 
+                    departamentosCount[a] > departamentosCount[b] ? a : b
+                );
+                
+                // Encontrar última carga
+                const ultimaCarga = registrosSupervisor
+                    .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))[0];
+                
+                const row = document.createElement('tr');
+                const nombreCompleto = supervisor.split(' ');
+                const nombre = nombreCompleto.slice(0, -1).join(' ');
+                const apellido = nombreCompleto[nombreCompleto.length - 1];
+                
+                row.innerHTML = `
+                    <td>${nombre}</td>
+                    <td>${apellido}</td>
+                    <td>${vehiculosAsignados.length > 0 ? vehiculosAsignados.join(', ') : 'Sin asignar'}</td>
+                    <td>${departamentoPrincipal || '-'}</td>
+                    <td>${ultimaCarga ? new Date(ultimaCarga.fecha).toLocaleDateString('es-ES') : 'N/A'}</td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Actualizar estadísticas
+        function actualizarEstadisticas() {
+            // Calcular litros totales
+            const totalLiters = registros.reduce((sum, registro) => sum + registro.litros, 0);
+            const totalLitersElement = document.getElementById('totalLiters');
+            if (totalLitersElement) {
+                totalLitersElement.textContent = totalLiters.toFixed(2);
+            }
+            
+            // Calcular registros de hoy
+            const hoy = new Date().toISOString().split('T')[0];
+            const todayRecords = registros.filter(registro => 
+                registro.fecha === hoy
+            ).length;
+            
+            const todayRecordsElement = document.getElementById('todayRecords');
+            if (todayRecordsElement) {
+                todayRecordsElement.textContent = todayRecords;
+            }
+            
+            // Actualizar número total de registros
+            const totalRecordsElement = document.getElementById('totalRecords');
+            if (totalRecordsElement) {
+                totalRecordsElement.textContent = registros.length;
+            }
+            
+            // Actualizar último número de orden
+            const lastOrderElement = document.getElementById('lastOrder');
+            if (lastOrderElement && registros.length > 0) {
+                const lastOrder = registros[registros.length - 1].numeroOrden;
+                lastOrderElement.textContent = lastOrder;
+            }
+        }
+
+        // Generar reporte semanal
+        function generarReporteSemanal() {
+            const weekSelect = document.getElementById('reportWeek');
+            const yearSelect = document.getElementById('reportYear');
+            
+            if (!weekSelect || !yearSelect) return;
+            
+            const week = parseInt(weekSelect.value);
+            const year = parseInt(yearSelect.value);
+            
+            // Obtener fechas de la semana
+            const weekDates = getWeekDates(year, week);
+            const startDate = weekDates.start.toISOString().split('T')[0];
+            const endDate = weekDates.end.toISOString().split('T')[0];
+            
+            // Actualizar rango de semana en la interfaz
+            const weekRangeElement = document.getElementById('weekRange');
+            if (weekRangeElement) {
+                weekRangeElement.textContent = `${weekDates.start.toLocaleDateString('es-ES', {day: '2-digit', month: '2-digit'})} - ${weekDates.end.toLocaleDateString('es-ES', {day: '2-digit', month: '2-digit'})}`;
+            }
+            
+            // Mostrar sección semanal
+            document.getElementById('weeklyReportSection').style.display = 'block';
+            document.getElementById('monthlyReportSection').style.display = 'none';
+            document.getElementById('monthlyGasoilSection').style.display = 'none';
+            
+            // Filtrar registros de la semana seleccionada
+            const registrosSemanales = registros.filter(registro => {
+                const fecha = new Date(registro.fecha);
+                return fecha >= weekDates.start && fecha <= weekDates.end;
+            });
+            
+            // Actualizar gráficos
+            actualizarGraficos(registrosSemanales);
+            
+            // Actualizar resumen de costos semanales
+            actualizarResumenCostosSemanales(registrosSemanales);
+            
+            // Actualizar costos por centro de costo
+            actualizarCostosPorCentroCosto(registrosSemanales);
+        }
+
+        // Generar reporte mensual
+        function generarReporteMensual() {
+            const monthSelect = document.getElementById('reportMonth');
+            const yearSelect = document.getElementById('reportYear');
+            
+            if (!monthSelect || !yearSelect) return;
+            
+            const month = parseInt(monthSelect.value);
+            const year = parseInt(yearSelect.value);
+            
+            // Mostrar secciones mensuales
+            document.getElementById('weeklyReportSection').style.display = 'none';
+            document.getElementById('monthlyReportSection').style.display = 'block';
+            document.getElementById('monthlyGasoilSection').style.display = 'block';
+            
+            // Filtrar registros del mes y año seleccionados
+            const registrosMensuales = registros.filter(registro => {
+                const fecha = new Date(registro.fecha);
+                return fecha.getMonth() + 1 === month && fecha.getFullYear() === year;
+            });
+            
+            // Actualizar gráficos
+            actualizarGraficos(registrosMensuales);
+            
+            // Actualizar tablas de reporte mensual separadas
+            actualizarTablaReporteMensual(registrosMensuales);
+            
+            // Actualizar costos por centro de costo
+            actualizarCostosPorCentroCosto(registrosMensuales);
+        }
+
+        // Generar reporte anual
+        function generarReporteAnual() {
+            const yearSelect = document.getElementById('reportYear');
+            if (!yearSelect) return;
+            
+            const year = parseInt(yearSelect.value);
+            
+            // Mostrar secciones mensuales (para anual usamos las mismas tablas)
+            document.getElementById('weeklyReportSection').style.display = 'none';
+            document.getElementById('monthlyReportSection').style.display = 'block';
+            document.getElementById('monthlyGasoilSection').style.display = 'block';
+            
+            // Filtrar registros del año seleccionado
+            const registrosAnuales = registros.filter(registro => {
+                const fecha = new Date(registro.fecha);
+                return fecha.getFullYear() === year;
+            });
+            
+            // Actualizar gráficos
+            actualizarGraficos(registrosAnuales);
+            
+            // Actualizar tablas de reporte anual (agrupado por mes)
+            actualizarTablaReporteAnual(registrosAnuales, year);
+            
+            // Actualizar costos por centro de costo
+            actualizarCostosPorCentroCosto(registrosAnuales);
+        }
+
+        // Actualizar gráficos
+        function actualizarGraficos(registrosFiltrados) {
+            // Destruir gráficos anteriores si existen
+            if (deptChartInstance) {
+                deptChartInstance.destroy();
+            }
+            if (fuelTypeChartInstance) {
+                fuelTypeChartInstance.destroy();
+            }
+            
+            // Datos para gráfico de departamentos
+            const deptData = {};
+            const deptVehiculos = {};
+            
+            registrosFiltrados.forEach(registro => {
+                const dept = registro.departamento;
+                if (!deptData[dept]) {
+                    deptData[dept] = 0;
+                    deptVehiculos[dept] = new Set();
+                }
+                deptData[dept] += registro.litros;
+                deptVehiculos[dept].add(registro.placa);
+            });
+            
+            // Gráfico de departamentos
+            const deptChartCanvas = document.getElementById('deptChart');
+            if (deptChartCanvas) {
+                const ctx = deptChartCanvas.getContext('2d');
+                
+                deptChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: Object.keys(deptData),
+                        datasets: [{
+                            label: 'Litros por Departamento',
+                            data: Object.values(deptData),
+                            backgroundColor: [
+                                '#3498db',
+                                '#2ecc71',
+                                '#e74c3c',
+                                '#f39c12',
+                                '#9b59b6',
+                                '#1abc9c',
+                                '#34495e',
+                                '#f1c40f',
+                                '#e67e22',
+                                '#95a5a6'
+                            ],
+                            borderColor: [
+                                '#2980b9',
+                                '#27ae60',
+                                '#c0392b',
+                                '#d35400',
+                                '#8e44ad',
+                                '#16a085',
+                                '#2c3e50',
+                                '#f39c12',
+                                '#d35400',
+                                '#7f8c8d'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Litros'
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    afterLabel: function(context) {
+                                        const dept = context.label;
+                                        const vehiculosCount = deptVehiculos[dept] ? deptVehiculos[dept].size : 0;
+                                        return `Vehículos: ${vehiculosCount}`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Datos para gráfico de tipo de combustible
+            const fuelTypeData = {
+                gasolina: 0,
+                gasoil: 0
+            };
+            
+            registrosFiltrados.forEach(registro => {
+                fuelTypeData[registro.tipoCombustible] += registro.litros;
+            });
+            
+            // Gráfico de tipo de combustible
+            const fuelTypeChartCanvas = document.getElementById('fuelTypeChart');
+            if (fuelTypeChartCanvas) {
+                const ctx = fuelTypeChartCanvas.getContext('2d');
+                
+                fuelTypeChartInstance = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: ['Gasolina', 'Gasoil'],
+                        datasets: [{
+                            label: 'Distribución por Tipo de Combustible',
+                            data: [fuelTypeData.gasolina, fuelTypeData.gasoil],
+                            backgroundColor: [
+                                '#3498db',
+                                '#27ae60'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Actualizar costos por centro de costo
+        function actualizarCostosPorCentroCosto(registrosFiltrados) {
+            const container = document.getElementById('costosPorCentroCosto');
+            if (!container) return;
+            
+            // Agrupar por centro de costo
+            const costosPorCentro = {};
+            
+            registrosFiltrados.forEach(registro => {
+                const centro = registro.centroCosto;
+                if (!costosPorCentro[centro]) {
+                    costosPorCentro[centro] = {
+                        gasolina: { litros: 0, costo: 0 },
+                        gasoil: { litros: 0, costoCombustible: 0, flete: 0 }
+                    };
+                }
+                
+                if (registro.tipoCombustible === 'gasolina') {
+                    costosPorCentro[centro].gasolina.litros += registro.litros;
+                    costosPorCentro[centro].gasolina.costo += registro.litros * PRECIOS.gasolina;
+                } else {
+                    costosPorCentro[centro].gasoil.litros += registro.litros;
+                    costosPorCentro[centro].gasoil.costoCombustible += registro.litros * PRECIOS.gasoil;
+                    costosPorCentro[centro].gasoil.flete += registro.costoFlete || 0;
+                }
+            });
+            
+            // Crear HTML
+            let html = '<div class="stats-grid">';
+            
+            Object.keys(costosPorCentro).forEach(centro => {
+                const datos = costosPorCentro[centro];
+                const totalGasolina = datos.gasolina.costo;
+                const totalGasoil = datos.gasoil.costoCombustible + datos.gasoil.flete;
+                const totalCentro = totalGasolina + totalGasoil;
+                
+                html += `
+                    <div class="stat-box">
+                        <i class="fas fa-dollar-sign"></i>
+                        <div class="stat-content">
+                            <h4>${centro}</h4>
+                            <p>$${totalCentro.toFixed(2)}</p>
+                            <div style="font-size: 0.7rem; color: #666;">
+                                Gasolina: $${totalGasolina.toFixed(2)}<br>
+                                Gasoil: $${totalGasoil.toFixed(2)}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            // Calcular total general
+            let totalGeneral = 0;
+            let totalGasolinaGeneral = 0;
+            let totalGasoilGeneral = 0;
+            
+            Object.keys(costosPorCentro).forEach(centro => {
+                const datos = costosPorCentro[centro];
+                totalGasolinaGeneral += datos.gasolina.costo;
+                totalGasoilGeneral += datos.gasoil.costoCombustible + datos.gasoil.flete;
+            });
+            
+            totalGeneral = totalGasolinaGeneral + totalGasoilGeneral;
+            
+            html += `
+                <div class="stat-box" style="background-color: #e3f2fd;">
+                    <i class="fas fa-chart-line"></i>
+                    <div class="stat-content">
+                        <h4>TOTAL GENERAL</h4>
+                        <p>$${totalGeneral.toFixed(2)}</p>
+                        <div style="font-size: 0.7rem; color: #666;">
+                            Gasolina: $${totalGasolinaGeneral.toFixed(2)}<br>
+                            Gasoil: $${totalGasoilGeneral.toFixed(2)}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        // Actualizar resumen de costos semanales
+        function actualizarResumenCostosSemanales(registrosSemanales) {
+            let gasolinaLitros = 0;
+            let gasolinaCosto = 0;
+            let gasoilLitros = 0;
+            let gasoilCombustible = 0;
+            let gasoilFlete = 0;
+            
+            registrosSemanales.forEach(registro => {
+                if (registro.tipoCombustible === 'gasolina') {
+                    gasolinaLitros += registro.litros;
+                    gasolinaCosto += registro.litros * PRECIOS.gasolina;
+                } else {
+                    gasoilLitros += registro.litros;
+                    gasoilCombustible += registro.litros * PRECIOS.gasoil;
+                    gasoilFlete += registro.costoFlete || 0;
+                }
+            });
+            
+            const totalDias = 7; // Semana tiene 7 días
+            const gasolinaDiario = gasolinaCosto / totalDias;
+            const gasoilTotal = gasoilCombustible + gasoilFlete;
+            const gasoilDiario = gasoilTotal / totalDias;
+            
+            const weeklyGasolinaTotalLiters = document.getElementById('weeklyGasolinaTotalLiters');
+            if (weeklyGasolinaTotalLiters) weeklyGasolinaTotalLiters.textContent = gasolinaLitros.toFixed(2);
+            
+            const weeklyGasolinaTotalCost = document.getElementById('weeklyGasolinaTotalCost');
+            if (weeklyGasolinaTotalCost) weeklyGasolinaTotalCost.textContent = `$${gasolinaCosto.toFixed(2)}`;
+            
+            const weeklyGasolinaDailyAvg = document.getElementById('weeklyGasolinaDailyAvg');
+            if (weeklyGasolinaDailyAvg) weeklyGasolinaDailyAvg.textContent = `$${gasolinaDiario.toFixed(2)}`;
+            
+            const weeklyGasoilTotalLiters = document.getElementById('weeklyGasoilTotalLiters');
+            if (weeklyGasoilTotalLiters) weeklyGasoilTotalLiters.textContent = gasoilLitros.toFixed(2);
+            
+            const weeklyGasoilFuelCost = document.getElementById('weeklyGasoilFuelCost');
+            if (weeklyGasoilFuelCost) weeklyGasoilFuelCost.textContent = `$${gasoilCombustible.toFixed(2)}`;
+            
+            const weeklyGasoilFleteCost = document.getElementById('weeklyGasoilFleteCost');
+            if (weeklyGasoilFleteCost) weeklyGasoilFleteCost.textContent = `$${gasoilFlete.toFixed(2)}`;
+            
+            const weeklyGasoilTotalCost = document.getElementById('weeklyGasoilTotalCost');
+            if (weeklyGasoilTotalCost) weeklyGasoilTotalCost.textContent = `$${gasoilTotal.toFixed(2)}`;
+            
+            const weeklyGasoilDailyAvg = document.getElementById('weeklyGasoilDailyAvg');
+            if (weeklyGasoilDailyAvg) weeklyGasoilDailyAvg.textContent = `$${gasoilDiario.toFixed(2)}`;
+        }
+
+        // Actualizar tablas de reporte mensual separadas
+        function actualizarTablaReporteMensual(registrosMensuales) {
+            // Separar registros por tipo de combustible
+            const registrosGasolina = registrosMensuales.filter(r => r.tipoCombustible === 'gasolina');
+            const registrosGasoil = registrosMensuales.filter(r => r.tipoCombustible === 'gasoil');
+            
+            // Actualizar tabla de gasolina
+            actualizarTablaGasolina(registrosGasolina);
+            
+            // Actualizar tabla de gasoil
+            actualizarTablaGasoil(registrosGasoil);
+        }
+
+        // Actualizar tabla de gasolina
+        function actualizarTablaGasolina(registrosGasolina) {
+            const tableBody = document.getElementById('monthlyGasolinaBody');
+            if (!tableBody) return;
+            
+            // Agrupar por centro de costo
+            const reportePorCentroCosto = {};
+            
+            registrosGasolina.forEach(registro => {
+                const centro = registro.centroCosto;
+                if (!reportePorCentroCosto[centro]) {
+                    reportePorCentroCosto[centro] = {
+                        centroCosto: centro,
+                        vehiculos: new Set(),
+                        litros: 0,
+                        costo: 0
+                    };
+                }
+                
+                // Agregar vehículo
+                reportePorCentroCosto[centro].vehiculos.add(registro.placa);
+                
+                // Acumular litros y costo
+                reportePorCentroCosto[centro].litros += registro.litros;
+                reportePorCentroCosto[centro].costo += registro.litros * PRECIOS.gasolina;
+            });
+            
+            // Limpiar tabla
+            tableBody.innerHTML = '';
+            
+            // Calcular totales
+            let totalLitros = 0;
+            let totalCosto = 0;
+            let totalVehiculos = new Set();
+            
+            // Llenar tabla
+            Object.keys(reportePorCentroCosto).forEach(centro => {
+                const data = reportePorCentroCosto[centro];
+                const vehiculosList = Array.from(data.vehiculos);
+                const promedioPorVehiculo = data.vehiculos.size > 0 ? data.costo / data.vehiculos.size : 0;
+                
+                // Acumular totales
+                totalLitros += data.litros;
+                totalCosto += data.costo;
+                data.vehiculos.forEach(v => totalVehiculos.add(v));
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>${data.centroCosto}</strong></td>
+                    <td>${vehiculosList.join(', ')}</td>
+                    <td>${data.litros.toFixed(2)}</td>
+                    <td>$${data.costo.toFixed(2)}</td>
+                    <td>$${promedioPorVehiculo.toFixed(2)}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+            
+            // Agregar fila de totales
+            const totalPromedio = totalVehiculos.size > 0 ? totalCosto / totalVehiculos.size : 0;
+            const totalRow = document.createElement('tr');
+            totalRow.style.backgroundColor = '#f5f5f5';
+            totalRow.style.fontWeight = 'bold';
+            totalRow.innerHTML = `
+                <td><strong>TOTAL GASOLINA</strong></td>
+                <td>${Array.from(totalVehiculos).length} vehículos</td>
+                <td>${totalLitros.toFixed(2)}</td>
+                <td>$${totalCosto.toFixed(2)}</td>
+                <td>$${totalPromedio.toFixed(2)}</td>
+            `;
+            tableBody.appendChild(totalRow);
+        }
+
+        // Actualizar tabla de gasoil
+        function actualizarTablaGasoil(registrosGasoil) {
+            const tableBody = document.getElementById('monthlyGasoilBody');
+            if (!tableBody) return;
+            
+            // Agrupar por centro de costo
+            const reportePorCentroCosto = {};
+            
+            registrosGasoil.forEach(registro => {
+                const centro = registro.centroCosto;
+                if (!reportePorCentroCosto[centro]) {
+                    reportePorCentroCosto[centro] = {
+                        centroCosto: centro,
+                        vehiculos: new Set(),
+                        litros: 0,
+                        costoCombustible: 0,
+                        flete: 0
+                    };
+                }
+                
+                // Agregar vehículo
+                reportePorCentroCosto[centro].vehiculos.add(registro.placa);
+                
+                // Acumular litros, costo combustible y flete
+                reportePorCentroCosto[centro].litros += registro.litros;
+                reportePorCentroCosto[centro].costoCombustible += registro.litros * PRECIOS.gasoil;
+                reportePorCentroCosto[centro].flete += registro.costoFlete || 0;
+            });
+            
+            // Limpiar tabla
+            tableBody.innerHTML = '';
+            
+            // Calcular totales
+            let totalLitros = 0;
+            let totalCostoCombustible = 0;
+            let totalFlete = 0;
+            let totalVehiculos = new Set();
+            
+            // Llenar tabla
+            Object.keys(reportePorCentroCosto).forEach(centro => {
+                const data = reportePorCentroCosto[centro];
+                const vehiculosList = Array.from(data.vehiculos);
+                const costoTotal = data.costoCombustible + data.flete;
+                const promedioPorVehiculo = data.vehiculos.size > 0 ? costoTotal / data.vehiculos.size : 0;
+                
+                // Acumular totales
+                totalLitros += data.litros;
+                totalCostoCombustible += data.costoCombustible;
+                totalFlete += data.flete;
+                data.vehiculos.forEach(v => totalVehiculos.add(v));
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>${data.centroCosto}</strong></td>
+                    <td>${vehiculosList.join(', ')}</td>
+                    <td>${data.litros.toFixed(2)}</td>
+                    <td>$${data.costoCombustible.toFixed(2)}</td>
+                    <td>$${data.flete.toFixed(2)}</td>
+                    <td>$${costoTotal.toFixed(2)}</td>
+                    <td>$${promedioPorVehiculo.toFixed(2)}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+            
+            // Agregar fila de totales
+            const totalCosto = totalCostoCombustible + totalFlete;
+            const totalPromedio = totalVehiculos.size > 0 ? totalCosto / totalVehiculos.size : 0;
+            const totalRow = document.createElement('tr');
+            totalRow.style.backgroundColor = '#f5f5f5';
+            totalRow.style.fontWeight = 'bold';
+            totalRow.innerHTML = `
+                <td><strong>TOTAL GASOIL</strong></td>
+                <td>${Array.from(totalVehiculos).length} vehículos</td>
+                <td>${totalLitros.toFixed(2)}</td>
+                <td>$${totalCostoCombustible.toFixed(2)}</td>
+                <td>$${totalFlete.toFixed(2)}</td>
+                <td>$${totalCosto.toFixed(2)}</td>
+                <td>$${totalPromedio.toFixed(2)}</td>
+            `;
+            tableBody.appendChild(totalRow);
+        }
+
+        // Actualizar tabla de reporte anual (agrupado por mes)
+        function actualizarTablaReporteAnual(registrosAnuales, year) {
+            // Para el reporte anual, separamos por tipo de combustible en dos tablas
+            const registrosGasolina = registrosAnuales.filter(r => r.tipoCombustible === 'gasolina');
+            const registrosGasoil = registrosAnuales.filter(r => r.tipoCombustible === 'gasoil');
+            
+            // Actualizar tabla anual de gasolina
+            actualizarTablaAnualGasolina(registrosGasolina, year);
+            
+            // Actualizar tabla anual de gasoil
+            actualizarTablaAnualGasoil(registrosGasoil, year);
+        }
+
+        // Actualizar tabla anual de gasolina
+        function actualizarTablaAnualGasolina(registrosGasolina, year) {
+            const tableBody = document.getElementById('monthlyGasolinaBody');
+            if (!tableBody) return;
+            
+            const meses = [
+                'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+            ];
+            
+            // Agrupar por mes
+            const reportePorMes = {};
+            
+            for (let i = 1; i <= 12; i++) {
+                reportePorMes[i] = {
+                    mes: meses[i-1],
+                    litros: 0,
+                    costo: 0,
+                    vehiculos: new Set()
+                };
+            }
+            
+            registrosGasolina.forEach(registro => {
+                const fecha = new Date(registro.fecha);
+                const mes = fecha.getMonth() + 1;
+                
+                // Agregar vehículo
+                reportePorMes[mes].vehiculos.add(registro.placa);
+                
+                // Acumular litros y costo
+                reportePorMes[mes].litros += registro.litros;
+                reportePorMes[mes].costo += registro.litros * PRECIOS.gasolina;
+            });
+            
+            // Limpiar tabla
+            tableBody.innerHTML = '';
+            
+            // Calcular totales anuales
+            let totalLitros = 0;
+            let totalCosto = 0;
+            let totalVehiculos = new Set();
+            
+            // Llenar tabla
+            for (let i = 1; i <= 12; i++) {
+                const data = reportePorMes[i];
+                const vehiculosList = Array.from(data.vehiculos);
+                const promedioPorVehiculo = data.vehiculos.size > 0 ? data.costo / data.vehiculos.size : 0;
+                
+                // Acumular totales
+                totalLitros += data.litros;
+                totalCosto += data.costo;
+                data.vehiculos.forEach(v => totalVehiculos.add(v));
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>${data.mes}</strong></td>
+                    <td>${vehiculosList.length > 0 ? vehiculosList.join(', ') : '-'}</td>
+                    <td>${data.litros.toFixed(2)}</td>
+                    <td>$${data.costo.toFixed(2)}</td>
+                    <td>$${promedioPorVehiculo.toFixed(2)}</td>
+                `;
+                tableBody.appendChild(row);
+            }
+            
+            // Agregar fila de totales
+            const totalPromedio = totalVehiculos.size > 0 ? totalCosto / totalVehiculos.size : 0;
+            const totalRow = document.createElement('tr');
+            totalRow.style.backgroundColor = '#f5f5f5';
+            totalRow.style.fontWeight = 'bold';
+            totalRow.innerHTML = `
+                <td><strong>TOTAL ANUAL ${year} - GASOLINA</strong></td>
+                <td>${Array.from(totalVehiculos).length} vehículos</td>
+                <td>${totalLitros.toFixed(2)}</td>
+                <td>$${totalCosto.toFixed(2)}</td>
+                <td>$${totalPromedio.toFixed(2)}</td>
+            `;
+            tableBody.appendChild(totalRow);
+        }
+
+        // Actualizar tabla anual de gasoil
+        function actualizarTablaAnualGasoil(registrosGasoil, year) {
+            const tableBody = document.getElementById('monthlyGasoilBody');
+            if (!tableBody) return;
+            
+            const meses = [
+                'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+            ];
+            
+            // Agrupar por mes
+            const reportePorMes = {};
+            
+            for (let i = 1; i <= 12; i++) {
+                reportePorMes[i] = {
+                    mes: meses[i-1],
+                    litros: 0,
+                    costoCombustible: 0,
+                    flete: 0,
+                    vehiculos: new Set()
+                };
+            }
+            
+            registrosGasoil.forEach(registro => {
+                const fecha = new Date(registro.fecha);
+                const mes = fecha.getMonth() + 1;
+                
+                // Agregar vehículo
+                reportePorMes[mes].vehiculos.add(registro.placa);
+                
+                // Acumular litros, costo combustible y flete
+                reportePorMes[mes].litros += registro.litros;
+                reportePorMes[mes].costoCombustible += registro.litros * PRECIOS.gasoil;
+                reportePorMes[mes].flete += registro.costoFlete || 0;
+            });
+            
+            // Limpiar tabla
+            tableBody.innerHTML = '';
+            
+            // Calcular totales anuales
+            let totalLitros = 0;
+            let totalCostoCombustible = 0;
+            let totalFlete = 0;
+            let totalVehiculos = new Set();
+            
+            // Llenar tabla
+            for (let i = 1; i <= 12; i++) {
+                const data = reportePorMes[i];
+                const vehiculosList = Array.from(data.vehiculos);
+                const costoTotal = data.costoCombustible + data.flete;
+                const promedioPorVehiculo = data.vehiculos.size > 0 ? costoTotal / data.vehiculos.size : 0;
+                
+                // Acumular totales
+                totalLitros += data.litros;
+                totalCostoCombustible += data.costoCombustible;
+                totalFlete += data.flete;
+                data.vehiculos.forEach(v => totalVehiculos.add(v));
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>${data.mes}</strong></td>
+                    <td>${vehiculosList.length > 0 ? vehiculosList.join(', ') : '-'}</td>
+                    <td>${data.litros.toFixed(2)}</td>
+                    <td>$${data.costoCombustible.toFixed(2)}</td>
+                    <td>$${data.flete.toFixed(2)}</td>
+                    <td>$${costoTotal.toFixed(2)}</td>
+                    <td>$${promedioPorVehiculo.toFixed(2)}</td>
+                `;
+                tableBody.appendChild(row);
+            }
+            
+            // Agregar fila de totales
+            const totalCosto = totalCostoCombustible + totalFlete;
+            const totalPromedio = totalVehiculos.size > 0 ? totalCosto / totalVehiculos.size : 0;
+            const totalRow = document.createElement('tr');
+            totalRow.style.backgroundColor = '#f5f5f5';
+            totalRow.style.fontWeight = 'bold';
+            totalRow.innerHTML = `
+                <td><strong>TOTAL ANUAL ${year} - GASOIL</strong></td>
+                <td>${Array.from(totalVehiculos).length} vehículos</td>
+                <td>${totalLitros.toFixed(2)}</td>
+                <td>$${totalCostoCombustible.toFixed(2)}</td>
+                <td>$${totalFlete.toFixed(2)}</td>
+                <td>$${totalCosto.toFixed(2)}</td>
+                <td>$${totalPromedio.toFixed(2)}</td>
+            `;
+            tableBody.appendChild(totalRow);
+        }
+
+        // Editar registro
+        function editarRegistro(id) {
+            currentEditId = id;
+            const registro = registros.find(r => r.id === id);
+            
+            if (!registro) return;
+            
+            // Crear formulario de edición
+            const modalBody = document.querySelector('#editModal .modal-body');
+            if (!modalBody) return;
+            
+            modalBody.innerHTML = `
+                <form id="editForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editNumeroOrden">Número de Orden *</label>
+                            <input type="text" id="editNumeroOrden" value="${registro.numeroOrden}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editFecha">Fecha *</label>
+                            <input type="date" id="editFecha" value="${registro.fecha}" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editDepartamento">Departamento *</label>
+                            <select id="editDepartamento" required>
+                                <option value="">Seleccione...</option>
+                                ${departamentos.map(d => `<option value="${d}" ${registro.departamento === d ? 'selected' : ''}>${d}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="editCentroCosto">Centro de Costo *</label>
+                            <select id="editCentroCosto" required>
+                                <option value="">Seleccione...</option>
+                                ${centrosCosto.map(c => `<option value="${c}" ${registro.centroCosto === c ? 'selected' : ''}>${c}</option>`).join('')}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row" id="editNombreApellidoRow" style="display: flex;">
+                        <div class="form-group">
+                            <label for="editNombreApellido">Nombre y Apellido *</label>
+                            <input type="text" id="editNombreApellido" value="${registro.supervisor}" required>
+                        </div>
+                        
+                        <div class="form-group" id="editTipoMsoGroup" style="${registro.departamento === 'MSO' ? 'display: block;' : 'display: none;'}">
+                            <label for="editTipoMso">Tipo de Personal MSO</label>
+                            <select id="editTipoMso">
+                                <option value="">Seleccione...</option>
+                                <option value="Caracas" ${registro.tipoMso === 'Caracas' ? 'selected' : ''}>Personal MSO Caracas</option>
+                                <option value="Barquisimeto" ${registro.tipoMso === 'Barquisimeto' ? 'selected' : ''}>Personal MSO Barquisimeto</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editPlaca">Placa del Vehículo *</label>
+                            <input type="text" id="editPlaca" value="${registro.placa}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editTipoCombustible">Tipo de Combustible *</label>
+                            <select id="editTipoCombustible" required ${registro.departamento === 'MSO' ? 'disabled' : ''}>
+                                <option value="gasolina" ${registro.tipoCombustible === 'gasolina' ? 'selected' : ''}>Gasolina</option>
+                                <option value="gasoil" ${registro.tipoCombustible === 'gasoil' ? 'selected' : ''}>Gasoil</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="editLitros">Litros Suministrados *</label>
+                            <input type="number" id="editLitros" step="0.01" min="0" value="${registro.litros}" required>
+                        </div>
+                        <div class="form-group" id="editCostoFleteGroup" style="${registro.tipoCombustible === 'gasoil' ? 'display: block;' : 'display: none;'}">
+                            <label for="editCostoFlete">Costo Flete (USD)</label>
+                            <input type="number" id="editCostoFlete" step="0.01" min="0" value="${registro.costoFlete || 0}">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label for="editObservaciones">Observaciones</label>
+                            <textarea id="editObservaciones" rows="3">${registro.observaciones || ''}</textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="form-buttons">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Guardar Cambios
+                        </button>
+                        <button type="button" id="cancelEdit" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancelar
+                        </button>
+                    </div>
+                </form>
+            `;
+            
+            // Mostrar modal
+            document.getElementById('editModal').style.display = 'flex';
+            
+            // Configurar evento del formulario de edición
+            const editForm = document.getElementById('editForm');
+            if (editForm) {
+                editForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    guardarCambiosEdicion();
+                });
+            }
+            
+            // Configurar botón cancelar
+            const cancelEditBtn = document.getElementById('cancelEdit');
+            if (cancelEditBtn) {
+                cancelEditBtn.addEventListener('click', cerrarModal);
+            }
+            
+            // Configurar cambio de departamento en edición
+            const editDepartamento = document.getElementById('editDepartamento');
+            if (editDepartamento) {
+                editDepartamento.addEventListener('change', function() {
+                    const departamento = this.value;
+                    const tipoMsoGroup = document.getElementById('editTipoMsoGroup');
+                    const tipoCombustibleSelect = document.getElementById('editTipoCombustible');
+                    const centroCostoSelect = document.getElementById('editCentroCosto');
+                    
+                    if (departamento) {
+                        // Si es MSO, mostrar select para tipo de MSO
+                        if (departamento === 'MSO') {
+                            if (tipoMsoGroup) tipoMsoGroup.style.display = 'block';
+                            
+                            // Para MSO, tipo de combustible debe ser gasolina
+                            if (tipoCombustibleSelect) {
+                                tipoCombustibleSelect.value = 'gasolina';
+                                tipoCombustibleSelect.disabled = true;
+                            }
+                            
+                            // Establecer centro de costo como MSO automáticamente
+                            if (centroCostoSelect) {
+                                centroCostoSelect.value = 'MSO';
+                                centroCostoSelect.disabled = true;
+                            }
+                        } else {
+                            if (tipoMsoGroup) tipoMsoGroup.style.display = 'none';
+                            
+                            // Habilitar tipo de combustible
+                            if (tipoCombustibleSelect) tipoCombustibleSelect.disabled = false;
+                            
+                            // Habilitar centro de costo
+                            if (centroCostoSelect) centroCostoSelect.disabled = false;
+                        }
+                    }
+                });
+            }
+            
+            // Configurar cambio de tipo de combustible en edición
+            const editTipoCombustible = document.getElementById('editTipoCombustible');
+            if (editTipoCombustible) {
+                editTipoCombustible.addEventListener('change', function() {
+                    const costoFleteGroup = document.getElementById('editCostoFleteGroup');
+                    if (this.value === 'gasoil') {
+                        if (costoFleteGroup) costoFleteGroup.style.display = 'block';
+                    } else {
+                        if (costoFleteGroup) costoFleteGroup.style.display = 'none';
+                        const editCostoFlete = document.getElementById('editCostoFlete');
+                        if (editCostoFlete) editCostoFlete.value = '0';
+                    }
+                });
+            }
+        }
+
+        // Guardar cambios de edición
+        function guardarCambiosEdicion() {
+            const registroIndex = registros.findIndex(r => r.id === currentEditId);
+            
+            if (registroIndex === -1) return;
+            
+            // Obtener valores del formulario
+            const editDepartamento = document.getElementById('editDepartamento');
+            const editNombreApellido = document.getElementById('editNombreApellido');
+            const editTipoMso = document.getElementById('editTipoMso');
+            const editCentroCosto = document.getElementById('editCentroCosto');
+            const editTipoCombustible = document.getElementById('editTipoCombustible');
+            const editCostoFlete = document.getElementById('editCostoFlete');
+            
+            if (!editDepartamento || !editNombreApellido || !editCentroCosto || !editTipoCombustible) {
+                alert('Error: No se pudieron obtener los datos del formulario');
+                return;
+            }
+            
+            const departamento = editDepartamento.value;
+            const nombreApellido = editNombreApellido.value.trim().toUpperCase();
+            
+            if (!nombreApellido) {
+                alert('Por favor ingrese el nombre y apellido del solicitante');
+                return;
+            }
+            
+            // Obtener tipo de MSO si el departamento es MSO
+            let tipoMso = '';
+            if (departamento === 'MSO') {
+                tipoMso = editTipoMso ? editTipoMso.value : '';
+                if (!tipoMso) {
+                    alert('Por favor seleccione el tipo de Personal MSO');
+                    return;
+                }
+            }
+            
+            // Validar centro de costo
+            const centroCosto = editCentroCosto.value;
+            if (!centrosCosto.includes(centroCosto)) {
+                alert('Por favor seleccione un centro de costo válido');
+                return;
+            }
+            
+            // Obtener costo flete
+            let costoFlete = 0;
+            const tipoCombustible = editTipoCombustible.value;
+            if (tipoCombustible === 'gasoil') {
+                costoFlete = editCostoFlete ? parseFloat(editCostoFlete.value) || 0 : 0;
+            }
+            
+            // Actualizar registro
+            registros[registroIndex] = {
+                ...registros[registroIndex],
+                numeroOrden: document.getElementById('editNumeroOrden').value,
+                fecha: document.getElementById('editFecha').value,
+                placa: document.getElementById('editPlaca').value.toUpperCase(),
+                departamento: departamento,
+                centroCosto: centroCosto,
+                supervisor: nombreApellido,
+                tipoCombustible: tipoCombustible,
+                litros: parseFloat(document.getElementById('editLitros').value),
+                costoFlete: costoFlete,
+                observaciones: document.getElementById('editObservaciones').value,
+                tipoPersonal: departamento === 'MSO' ? 'mso' : 'supervisor',
+                tipoMso: tipoMso
+            };
+            
+            // Actualizar interfaz
+            actualizarTablaRegistros();
+            actualizarEstadisticas();
+            actualizarTablaSupervisores();
+            
+            // Si estamos en la sección de reportes, actualizar
+            if (document.getElementById('reportes') && document.getElementById('reportes').classList.contains('active')) {
+                const reportType = document.getElementById('reportType').value;
+                if (reportType === 'semanal') {
+                    generarReporteSemanal();
+                } else if (reportType === 'mensual') {
+                    generarReporteMensual();
+                } else {
+                    generarReporteAnual();
+                }
+            }
+            
+            // Cerrar modal
+            cerrarModal();
+            
+            // Mostrar mensaje
+            alert('Registro actualizado exitosamente');
+        }
+
+        // Confirmar eliminación
+        function confirmarEliminacion(id) {
+            currentEditId = id;
+            const confirmModal = document.getElementById('confirmModal');
+            if (confirmModal) {
+                confirmModal.style.display = 'flex';
+            }
+        }
+
+        // Eliminar registro
+        function eliminarRegistro() {
+            const registroIndex = registros.findIndex(r => r.id === currentEditId);
+            
+            if (registroIndex !== -1) {
+                registros.splice(registroIndex, 1);
+                actualizarTablaRegistros();
+                actualizarEstadisticas();
+                actualizarTablaSupervisores();
+                
+                // Si estamos en la sección de reportes, actualizar
+                if (document.getElementById('reportes') && document.getElementById('reportes').classList.contains('active')) {
+                    const reportType = document.getElementById('reportType').value;
+                    if (reportType === 'semanal') {
+                        generarReporteSemanal();
+                    } else if (reportType === 'mensual') {
+                        generarReporteMensual();
+                    } else {
+                        generarReporteAnual();
+                    }
+                }
+                
+                alert('Registro eliminado exitosamente');
+            }
+            
+            cerrarModal();
+        }
+
+        // Cerrar modal
+        function cerrarModal() {
+            const editModal = document.getElementById('editModal');
+            const confirmModal = document.getElementById('confirmModal');
+            const msoModal = document.getElementById('msoModal');
+            const centrosCostoModal = document.getElementById('centrosCostoModal');
+            
+            if (editModal) editModal.style.display = 'none';
+            if (confirmModal) confirmModal.style.display = 'none';
+            if (msoModal) msoModal.style.display = 'none';
+            if (centrosCostoModal) centrosCostoModal.style.display = 'none';
+            
+            currentEditId = null;
+        }
+
+        // Limpiar filtros
+        function limpiarFiltros() {
+            const filterSupervisor = document.getElementById('filterSupervisor');
+            const filterDept = document.getElementById('filterDept');
+            const filterPlaca = document.getElementById('filterPlaca');
+            const filterDate = document.getElementById('filterDate');
+            
+            if (filterSupervisor) filterSupervisor.value = '';
+            if (filterDept) filterDept.value = '';
+            if (filterPlaca) filterPlaca.value = '';
+            if (filterDate) filterDate.value = '';
+            
+            actualizarTablaRegistros();
+        }
+
+        // Exportar a PDF
+        function exportarPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('landscape');
+            
+            // Título
+            doc.setFontSize(16);
+            doc.text('Reporte de Control de Combustibles', 14, 15);
+            
+            // Fecha de generación
+            doc.setFontSize(10);
+            doc.text(`Generado: ${new Date().toLocaleString('es-ES')}`, 14, 23);
+            
+            // Estadísticas
+            const totalLiters = registros.reduce((sum, r) => sum + r.litros, 0);
+            const today = new Date().toISOString().split('T')[0];
+            const todayRecords = registros.filter(r => r.fecha === today).length;
+            
+            doc.setFontSize(11);
+            doc.text('Resumen:', 14, 33);
+            doc.setFontSize(9);
+            doc.text(`Total de registros: ${registros.length}`, 14, 40);
+            doc.text(`Litros totales: ${totalLiters.toFixed(2)}`, 14, 47);
+            doc.text(`Registros hoy: ${todayRecords}`, 14, 54);
+            
+            // Tabla de registros
+            const headers = [['N° Orden', 'Fecha', 'Placa', 'Departamento', 'Centro Costo', 'Supervisor', 'Tipo', 'Litros', 'Costo']];
+            const data = registros.map(r => {
+                let costo = 0;
+                if (r.tipoCombustible === 'gasolina') {
+                    costo = r.litros * PRECIOS.gasolina;
+                } else {
+                    costo = (r.litros * PRECIOS.gasoil) + (r.costoFlete || 0);
+                }
+                
+                return [
+                    r.numeroOrden,
+                    new Date(r.fecha).toLocaleDateString('es-ES'),
+                    r.placa,
+                    r.departamento,
+                    r.centroCosto,
+                    r.supervisor,
+                    r.tipoCombustible.charAt(0).toUpperCase() + r.tipoCombustible.slice(1),
+                    r.litros.toFixed(2),
+                    `$${costo.toFixed(2)}`
+                ];
+            });
+            
+            doc.autoTable({
+                head: headers,
+                body: data,
+                startY: 60,
+                theme: 'striped',
+                headStyles: { fillColor: [52, 152, 219] },
+                margin: { horizontal: 14 }
+            });
+            
+            // Guardar PDF
+            doc.save(`reporte-combustible-${new Date().toISOString().slice(0,10)}.pdf`);
+        }
+
+        // Exportar a Excel
+        function exportarExcel() {
+            // Preparar datos
+            const data = registros.map(r => {
+                let costo = 0;
+                if (r.tipoCombustible === 'gasolina') {
+                    costo = r.litros * PRECIOS.gasolina;
+                } else {
+                    costo = (r.litros * PRECIOS.gasoil) + (r.costoFlete || 0);
+                }
+                
+                return {
+                    'N° Orden': r.numeroOrden,
+                    'Fecha': new Date(r.fecha).toLocaleDateString('es-ES'),
+                    'Placa': r.placa,
+                    'Departamento': r.departamento,
+                    'Centro Costo': r.centroCosto,
+                    'Supervisor': r.supervisor,
+                    'Tipo Personal': r.tipoPersonal === 'mso' ? 'MSO' : 'Supervisor',
+                    'Tipo MSO': r.tipoMso || '',
+                    'Tipo Combustible': r.tipoCombustible.charAt(0).toUpperCase() + r.tipoCombustible.slice(1),
+                    'Litros': r.litros,
+                    'Costo Flete': r.costoFlete || 0,
+                    'Costo Total': costo,
+                    'Observaciones': r.observaciones || ''
+                };
+            });
+            
+            // Crear hoja de trabajo
+            const ws = XLSX.utils.json_to_sheet(data);
+            
+            // Ajustar anchos de columna
+            const wscols = [
+                {wch: 10}, // N° Orden
+                {wch: 12}, // Fecha
+                {wch: 10}, // Placa
+                {wch: 15}, // Departamento
+                {wch: 20}, // Centro Costo
+                {wch: 20}, // Supervisor
+                {wch: 12}, // Tipo Personal
+                {wch: 15}, // Tipo MSO
+                {wch: 12}, // Tipo Combustible
+                {wch: 10}, // Litros
+                {wch: 12}, // Costo Flete
+                {wch: 12}, // Costo Total
+                {wch: 30}  // Observaciones
+            ];
+            ws['!cols'] = wscols;
+            
+            // Crear libro de trabajo
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Registros Combustible');
+            
+            // Exportar
+            XLSX.writeFile(wb, `registros-combustible-${new Date().toISOString().slice(0,10)}.xlsx`);
+        }
     </script>
 </body>
 </html>
