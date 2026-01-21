@@ -5,11 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Control de Combustibles</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <!-- Otras dependencias -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        /* (Los estilos CSS se mantienen igual) */
         /* Reset y estilos generales */
         * {
             margin: 0;
@@ -880,6 +886,27 @@
         .edit-departamentos-btn:hover {
             background-color: #2980b9;
         }
+        
+        /* Loading spinner */
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
     </style>
 </head>
 <body>
@@ -937,6 +964,10 @@
                 <!-- Sección de Registros -->
                 <section id="registros" class="content-section active">
                     <h2><i class="fas fa-list"></i> Registros de Combustible</h2>
+                    <div id="loadingRegistros" class="loading" style="display: none;">
+                        <div class="spinner"></div>
+                        <p>Cargando registros...</p>
+                    </div>
                     <div class="filters">
                         <input type="text" id="filterSupervisor" placeholder="Buscar por supervisor...">
                         <select id="filterDept">
@@ -1362,13 +1393,28 @@
     </div>
 
     <script>
+        // Configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyA8F5LUXaJIqcFD6GfV_L3ZYoR-b-F4_24",
+            authDomain: "control-de-combustibles-d7085.firebaseapp.com",
+            projectId: "control-de-combustibles-d7085",
+            storageBucket: "control-de-combustibles-d7085.firebasestorage.app",
+            messagingSenderId: "837259678344",
+            appId: "1:837259678344:web:a16a62a5320c65b4a0453d"
+        };
+
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
         // Precios de combustible (en dólares)
         const PRECIOS = {
             gasolina: 0.50,  // $0.50 por litro
             gasoil: 0.48     // $0.48 por litro
         };
 
-        // Datos de los supervisores (empleados) - INCLUYENDO LOS NUEVOS SUPERVISORES
+        // Datos de los supervisores (empleados)
         const supervisores = [
             "ANIBAL LOYATO",
             "PEDRO VIVAS", 
@@ -1598,57 +1644,122 @@
             { nombre: "Pedro Vivas", cargo: "VP", placa: "AD455CF", centroCosto: "MSO Tec" }
         ];
 
-        // Centros de costo iniciales (cada departamento como centro de costo)
-        let centrosCosto = [
-            "C.O Los Ruices",
-            "C.O El Rosal",  
-            "C.O La Naya",
-            "C.O El Paraiso",
-            "TDH",
-            "Obras",
-            "Departamento Comercial",
-            "Obras Corporativo",
-            "Backbone",
-            "MSO"
-        ];
-
-        // Departamentos disponibles (sincronizados con centros de costo)
-        let departamentos = [
-            "Los Ruices",
-            "El Rosal",
-            "La Naya",
-            "TDH",
-            "Obras",
-            "Comerciales",
-            "Obras Corporativo",
-            "MSO",
-            "El Paraiso",
-            "Backbone"
-        ];
-
         // Variables globales
         let registros = [];
         let personalMSO = [...personalMSOInicial];
+        let centrosCosto = [];
+        let departamentos = [];
         let currentEditId = null;
-        let nextId = 1;
         let deptChartInstance = null;
         let fuelTypeChartInstance = null;
 
         // Inicialización cuando el DOM esté listo
         document.addEventListener('DOMContentLoaded', function() {
-            inicializarSistema();
+            // Verificar si el usuario está autenticado
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    // Usuario autenticado, cargar datos
+                    inicializarSistema();
+                } else {
+                    // Mostrar mensaje de login
+                    alert("Por favor, inicia sesión para acceder al sistema");
+                    // En un sistema real, aquí mostrarías un formulario de login
+                }
+            });
+
+            // Cargar datos iniciales desde Firebase
+            cargarDatosIniciales();
+
             actualizarFechaHora();
             setInterval(actualizarFechaHora, 1000);
             
             // Generar semanas, meses y años para reportes
             generarOpcionesFechaReporte();
             
-            // Generar reporte inicial
-            generarReporteSemanal();
-            
             // Configurar eventos responsive
             configurarEventosResponsive();
         });
+
+        // Cargar datos iniciales desde Firebase
+        async function cargarDatosIniciales() {
+            try {
+                // Mostrar loading
+                document.getElementById('loadingRegistros').style.display = 'block';
+
+                // Cargar registros
+                const registrosSnapshot = await db.collection('registros').orderBy('fecha', 'desc').get();
+                registros = [];
+                registrosSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    registros.push({
+                        id: doc.id,
+                        ...data
+                    });
+                });
+
+                // Cargar centros de costo
+                const centrosSnapshot = await db.collection('configuracion').doc('centrosCosto').get();
+                if (centrosSnapshot.exists) {
+                    centrosCosto = centrosSnapshot.data().lista || [];
+                } else {
+                    // Si no existe, crear con valores por defecto
+                    centrosCosto = [
+                        "C.O Los Ruices",
+                        "C.O El Rosal",  
+                        "C.O La Naya",
+                        "C.O El Paraiso",
+                        "TDH",
+                        "Obras",
+                        "Departamento Comercial",
+                        "Obras Corporativo",
+                        "Backbone",
+                        "MSO"
+                    ];
+                    await db.collection('configuracion').doc('centrosCosto').set({ lista: centrosCosto });
+                }
+
+                // Cargar departamentos
+                const deptSnapshot = await db.collection('configuracion').doc('departamentos').get();
+                if (deptSnapshot.exists) {
+                    departamentos = deptSnapshot.data().lista || [];
+                } else {
+                    // Si no existe, crear con valores por defecto
+                    departamentos = [
+                        "Los Ruices",
+                        "El Rosal",
+                        "La Naya",
+                        "TDH",
+                        "Obras",
+                        "Comerciales",
+                        "Obras Corporativo",
+                        "MSO",
+                        "El Paraiso",
+                        "Backbone"
+                    ];
+                    await db.collection('configuracion').doc('departamentos').set({ lista: departamentos });
+                }
+
+                // Cargar personal MSO
+                const msoSnapshot = await db.collection('configuracion').doc('personalMSO').get();
+                if (msoSnapshot.exists) {
+                    personalMSO = msoSnapshot.data().lista || personalMSOInicial;
+                } else {
+                    // Si no existe, crear con valores por defecto
+                    await db.collection('configuracion').doc('personalMSO').set({ lista: personalMSOInicial });
+                }
+
+                // Inicializar el sistema
+                inicializarSistema();
+                
+                // Ocultar loading
+                document.getElementById('loadingRegistros').style.display = 'none';
+
+            } catch (error) {
+                console.error("Error cargando datos:", error);
+                alert("Error al cargar los datos. Recargue la página.");
+                document.getElementById('loadingRegistros').style.display = 'none';
+            }
+        }
 
         // Configurar eventos responsive
         function configurarEventosResponsive() {
@@ -1729,7 +1840,6 @@
         // Cargar centros de costo
         function cargarCentrosCosto() {
             const centroCostoSelect = document.getElementById('centroCosto');
-            const editCentroCostoSelect = document.getElementById('editCentroCosto');
             const newMsoCentroCostoSelect = document.getElementById('newMsoCentroCosto');
             
             // Limpiar selects
@@ -1793,7 +1903,7 @@
         }
 
         // Agregar nuevo centro de costo
-        function agregarCentroCosto() {
+        async function agregarCentroCosto() {
             const nuevoCentro = document.getElementById('nuevoCentroCosto').value.trim();
             
             if (!nuevoCentro) {
@@ -1807,7 +1917,7 @@
                 return;
             }
             
-            // Agregar al array
+            // Agregar al array local
             centrosCosto.push(nuevoCentro);
             
             // También agregar al array de departamentos si no existe
@@ -1816,20 +1926,29 @@
                 departamentos.push(nombreDept);
             }
             
-            // Actualizar interfaz
-            actualizarListaCentrosCostoModal();
-            cargarCentrosCosto();
-            cargarDepartamentosFiltros();
-            
-            // Limpiar input
-            document.getElementById('nuevoCentroCosto').value = '';
-            
-            // Mostrar mensaje
-            alert('Centro de costo agregado exitosamente');
+            // Guardar en Firebase
+            try {
+                await db.collection('configuracion').doc('centrosCosto').set({ lista: centrosCosto });
+                await db.collection('configuracion').doc('departamentos').set({ lista: departamentos });
+                
+                // Actualizar interfaz
+                actualizarListaCentrosCostoModal();
+                cargarCentrosCosto();
+                cargarDepartamentosFiltros();
+                
+                // Limpiar input
+                document.getElementById('nuevoCentroCosto').value = '';
+                
+                // Mostrar mensaje
+                alert('Centro de costo agregado exitosamente');
+            } catch (error) {
+                console.error("Error guardando centro de costo:", error);
+                alert("Error al guardar el centro de costo");
+            }
         }
 
         // Eliminar centro de costo
-        function eliminarCentroCosto(index) {
+        async function eliminarCentroCosto(index) {
             if (index < 0 || index >= centrosCosto.length) return;
             
             const centroAEliminar = centrosCosto[index];
@@ -1842,16 +1961,24 @@
                 return;
             }
             
-            // Eliminar del array
+            // Eliminar del array local
             centrosCosto.splice(index, 1);
             
-            // Actualizar interfaz
-            actualizarListaCentrosCostoModal();
-            cargarCentrosCosto();
-            cargarDepartamentosFiltros();
-            
-            // Mostrar mensaje
-            alert('Centro de costo eliminado exitosamente');
+            // Guardar en Firebase
+            try {
+                await db.collection('configuracion').doc('centrosCosto').set({ lista: centrosCosto });
+                
+                // Actualizar interfaz
+                actualizarListaCentrosCostoModal();
+                cargarCentrosCosto();
+                cargarDepartamentosFiltros();
+                
+                // Mostrar mensaje
+                alert('Centro de costo eliminado exitosamente');
+            } catch (error) {
+                console.error("Error eliminando centro de costo:", error);
+                alert("Error al eliminar el centro de costo");
+            }
         }
 
         // Configurar eventos
@@ -2359,7 +2486,7 @@
         }
 
         // Agregar nuevo personal MSO
-        function agregarPersonalMSO() {
+        async function agregarPersonalMSO() {
             const nombre = document.getElementById('newMsoNombre').value.trim();
             const cargo = document.getElementById('newMsoCargo').value.trim();
             const placa = document.getElementById('newMsoPlaca').value.trim().toUpperCase();
@@ -2384,18 +2511,29 @@
                 return;
             }
             
-            // Agregar nuevo MSO
-            personalMSO.push({ nombre, cargo, placa, centroCosto });
+            // Crear nuevo objeto MSO
+            const nuevoMSO = { nombre, cargo, placa, centroCosto };
             
-            // Actualizar interfaz
-            cargarPersonalMSO();
-            actualizarListaMSO();
+            // Agregar al array local
+            personalMSO.push(nuevoMSO);
             
-            // Cerrar modal y limpiar formulario
-            document.getElementById('msoModal').style.display = 'none';
-            document.getElementById('msoForm').reset();
-            
-            alert('Personal MSO agregado exitosamente');
+            // Guardar en Firebase
+            try {
+                await db.collection('configuracion').doc('personalMSO').set({ lista: personalMSO });
+                
+                // Actualizar interfaz
+                cargarPersonalMSO();
+                actualizarListaMSO();
+                
+                // Cerrar modal y limpiar formulario
+                document.getElementById('msoModal').style.display = 'none';
+                document.getElementById('msoForm').reset();
+                
+                alert('Personal MSO agregado exitosamente');
+            } catch (error) {
+                console.error("Error guardando MSO:", error);
+                alert("Error al guardar el personal MSO");
+            }
         }
 
         // Mostrar autocompletado para supervisores
@@ -2478,8 +2616,8 @@
             container.style.display = 'block';
         }
 
-        // Guardar nuevo registro - VERSIÓN CORREGIDA
-        function guardarRegistro(e) {
+        // Guardar nuevo registro - CON FIREBASE
+        async function guardarRegistro(e) {
             e.preventDefault();
             
             // Obtener valores del formulario
@@ -2545,11 +2683,10 @@
                 fechaInput = ahora.toISOString().slice(0, 10);
             }
             
-            // Crear nuevo registro CON LA FECHA CORRECTA
+            // Crear nuevo registro
             const nuevoRegistro = {
-                id: nextId++,
                 numeroOrden: document.getElementById('numeroOrden').value,
-                fecha: fechaInput, // Usar la fecha del input (o la actual si está vacía)
+                fecha: fechaInput,
                 placa: placa,
                 departamento: document.getElementById('departamento').value,
                 centroCosto: centroCosto,
@@ -2558,41 +2695,52 @@
                 litros: parseFloat(document.getElementById('litros').value),
                 costoFlete: costoFlete,
                 observaciones: document.getElementById('observaciones').value,
-                tipoPersonal: tipoPersonal
+                tipoPersonal: tipoPersonal,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
             };
             
-            // Agregar a la lista de registros
-            registros.push(nuevoRegistro);
-            
-            // Actualizar interfaz
-            actualizarTablaRegistros();
-            actualizarEstadisticas();
-            actualizarTablaSupervisores();
-            
-            // Mostrar mensaje de éxito
-            alert('Registro guardado exitosamente');
-            
-            // Limpiar formulario
-            document.getElementById('nuevoRegistroForm').reset();
-            
-            // Establecer fecha actual por defecto
-            const ahora = new Date();
-            document.getElementById('fecha').value = ahora.toISOString().slice(0, 10);
-            
-            // Restablecer valores por defecto
-            document.getElementById('tipoPersonal').value = '';
-            document.getElementById('tipoCombustible').disabled = false;
-            document.getElementById('placa').readOnly = false;
-            document.getElementById('departamento').disabled = false;
-            document.getElementById('centroCosto').disabled = false;
-            document.getElementById('costoFleteGroup').style.display = 'none';
-            document.getElementById('msoGroup').style.display = 'none';
-            document.getElementById('supervisorGroup').style.display = 'block';
-            document.getElementById('supervisor').required = true;
-            
-            // Regresar a la sección de registros
-            mostrarSeccion('registros');
-            document.querySelector('[data-section="registros"]').classList.add('active');
+            try {
+                // Guardar en Firebase
+                const docRef = await db.collection('registros').add(nuevoRegistro);
+                
+                // Agregar a la lista local con el ID generado
+                nuevoRegistro.id = docRef.id;
+                registros.push(nuevoRegistro);
+                
+                // Actualizar interfaz
+                actualizarTablaRegistros();
+                actualizarEstadisticas();
+                actualizarTablaSupervisores();
+                
+                // Mostrar mensaje de éxito
+                alert('Registro guardado exitosamente');
+                
+                // Limpiar formulario
+                document.getElementById('nuevoRegistroForm').reset();
+                
+                // Establecer fecha actual por defecto
+                const ahora = new Date();
+                document.getElementById('fecha').value = ahora.toISOString().slice(0, 10);
+                
+                // Restablecer valores por defecto
+                document.getElementById('tipoPersonal').value = '';
+                document.getElementById('tipoCombustible').disabled = false;
+                document.getElementById('placa').readOnly = false;
+                document.getElementById('departamento').disabled = false;
+                document.getElementById('centroCosto').disabled = false;
+                document.getElementById('costoFleteGroup').style.display = 'none';
+                document.getElementById('msoGroup').style.display = 'none';
+                document.getElementById('supervisorGroup').style.display = 'block';
+                document.getElementById('supervisor').required = true;
+                
+                // Regresar a la sección de registros
+                mostrarSeccion('registros');
+                document.querySelector('[data-section="registros"]').classList.add('active');
+                
+            } catch (error) {
+                console.error("Error guardando registro:", error);
+                alert("Error al guardar el registro. Intente nuevamente.");
+            }
         }
 
         // Actualizar tabla de registros
@@ -2675,14 +2823,14 @@
             // Agregar eventos a los botones de acción
             document.querySelectorAll('.btn-edit').forEach(btn => {
                 btn.addEventListener('click', function() {
-                    const id = parseInt(this.getAttribute('data-id'));
+                    const id = this.getAttribute('data-id');
                     editarRegistro(id);
                 });
             });
             
             document.querySelectorAll('.btn-delete').forEach(btn => {
                 btn.addEventListener('click', function() {
-                    const id = parseInt(this.getAttribute('data-id'));
+                    const id = this.getAttribute('data-id');
                     confirmarEliminacion(id);
                 });
             });
@@ -3642,8 +3790,8 @@
             });
         }
 
-        // Guardar cambios de edición - VERSIÓN CORREGIDA
-        function guardarCambiosEdicion() {
+        // Guardar cambios de edición - CON FIREBASE
+        async function guardarCambiosEdicion() {
             const registroIndex = registros.findIndex(r => r.id === currentEditId);
             
             if (registroIndex === -1) return;
@@ -3681,11 +3829,10 @@
                 fechaInput = ahora.toISOString().slice(0, 10);
             }
             
-            // Actualizar registro CON LA FECHA CORRECTA
-            registros[registroIndex] = {
-                ...registros[registroIndex],
+            // Actualizar registro
+            const registroActualizado = {
                 numeroOrden: document.getElementById('editNumeroOrden').value,
-                fecha: fechaInput, // Usar la fecha procesada
+                fecha: fechaInput,
                 placa: document.getElementById('editPlaca').value.toUpperCase(),
                 departamento: document.getElementById('editDepartamento').value,
                 centroCosto: centroCosto,
@@ -3694,45 +3841,19 @@
                 litros: parseFloat(document.getElementById('editLitros').value),
                 costoFlete: costoFlete,
                 observaciones: document.getElementById('editObservaciones').value,
-                tipoPersonal: tipoPersonal
+                tipoPersonal: tipoPersonal,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
             };
             
-            // Actualizar interfaz
-            actualizarTablaRegistros();
-            actualizarEstadisticas();
-            actualizarTablaSupervisores();
-            
-            // Si estamos en la sección de reportes, actualizar
-            if (document.getElementById('reportes').classList.contains('active')) {
-                const reportType = document.getElementById('reportType').value;
-                if (reportType === 'semanal') {
-                    generarReporteSemanal();
-                } else if (reportType === 'mensual') {
-                    generarReporteMensual();
-                } else {
-                    generarReporteAnual();
-                }
-            }
-            
-            // Cerrar modal
-            cerrarModal();
-            
-            // Mostrar mensaje
-            alert('Registro actualizado exitosamente');
-        }
-
-        // Confirmar eliminación
-        function confirmarEliminacion(id) {
-            currentEditId = id;
-            document.getElementById('confirmModal').style.display = 'flex';
-        }
-
-        // Eliminar registro
-        function eliminarRegistro() {
-            const registroIndex = registros.findIndex(r => r.id === currentEditId);
-            
-            if (registroIndex !== -1) {
-                registros.splice(registroIndex, 1);
+            try {
+                // Actualizar en Firebase
+                await db.collection('registros').doc(currentEditId).update(registroActualizado);
+                
+                // Actualizar en el array local
+                Object.assign(registros[registroIndex], registroActualizado);
+                registros[registroIndex].id = currentEditId;
+                
+                // Actualizar interfaz
                 actualizarTablaRegistros();
                 actualizarEstadisticas();
                 actualizarTablaSupervisores();
@@ -3749,7 +3870,59 @@
                     }
                 }
                 
-                alert('Registro eliminado exitosamente');
+                // Cerrar modal
+                cerrarModal();
+                
+                // Mostrar mensaje
+                alert('Registro actualizado exitosamente');
+                
+            } catch (error) {
+                console.error("Error actualizando registro:", error);
+                alert("Error al actualizar el registro. Intente nuevamente.");
+            }
+        }
+
+        // Confirmar eliminación
+        function confirmarEliminacion(id) {
+            currentEditId = id;
+            document.getElementById('confirmModal').style.display = 'flex';
+        }
+
+        // Eliminar registro - CON FIREBASE
+        async function eliminarRegistro() {
+            const registroIndex = registros.findIndex(r => r.id === currentEditId);
+            
+            if (registroIndex !== -1) {
+                try {
+                    // Eliminar de Firebase
+                    await db.collection('registros').doc(currentEditId).delete();
+                    
+                    // Eliminar del array local
+                    registros.splice(registroIndex, 1);
+                    
+                    // Actualizar interfaz
+                    actualizarTablaRegistros();
+                    actualizarEstadisticas();
+                    actualizarTablaSupervisores();
+                    
+                    // Si estamos en la sección de reportes, actualizar
+                    if (document.getElementById('reportes').classList.contains('active')) {
+                        const reportType = document.getElementById('reportType').value;
+                        if (reportType === 'semanal') {
+                            generarReporteSemanal();
+                        } else if (reportType === 'mensual') {
+                            generarReporteMensual();
+                        } else {
+                            generarReporteAnual();
+                        }
+                    }
+                    
+                    alert('Registro eliminado exitosamente');
+                    
+                } catch (error) {
+                    console.error("Error eliminando registro:", error);
+                    alert("Error al eliminar el registro. Intente nuevamente.");
+                }
             }
             
             cerrarModal();
