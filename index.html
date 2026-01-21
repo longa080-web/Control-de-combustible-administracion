@@ -1008,20 +1008,27 @@
                             </div>
                         </div>
 
-                        <!-- Campo para nombre y apellido (se muestra según el departamento) -->
                         <div class="form-row">
-                            <div class="form-group" id="nombreApellidoGroup" style="display: none;">
-                                <label for="nombreApellido">Nombre y Apellido *</label>
-                                <input type="text" id="nombreApellido" placeholder="Ej: Juan Pérez" autocomplete="off">
-                            </div>
-                            
-                            <!-- Select para tipo de MSO (solo para departamento MSO) -->
-                            <div class="form-group" id="tipoMsoGroup" style="display: none;">
-                                <label for="tipoMso">Tipo de Personal MSO *</label>
-                                <select id="tipoMso">
+                            <div class="form-group">
+                                <label for="tipoPersonal">Tipo de Personal *</label>
+                                <select id="tipoPersonal" required>
                                     <option value="">Seleccione...</option>
-                                    <option value="Caracas">Personal MSO Caracas</option>
-                                    <option value="Barquisimeto">Personal MSO Barquisimeto</option>
+                                    <option value="supervisor">Supervisor</option>
+                                    <option value="mso">Personal MSO</option>
+                                </select>
+                            </div>
+                            <div class="form-group" id="supervisorGroup">
+                                <label for="supervisor">Supervisor *</label>
+                                <div class="autocomplete-container">
+                                    <input type="text" id="supervisor" placeholder="Buscar supervisor..." autocomplete="off">
+                                    <div class="autocomplete-results" id="supervisorResults"></div>
+                                </div>
+                            </div>
+                            <div class="form-group" id="msoGroup" style="display: none;">
+                                <label for="msoPersona">Personal MSO *</label>
+                                <select id="msoPersona">
+                                    <option value="">Seleccione...</option>
+                                    <!-- Las opciones se cargarán dinámicamente -->
                                 </select>
                             </div>
                         </div>
@@ -1063,7 +1070,7 @@
                             <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-save"></i> Guardar Registro
                             </button>
-                            <button type="reset" class="btn btn-secondary" id="resetBtn">
+                            <button type="reset" class="btn btn-secondary">
                                 <i class="fas fa-redo"></i> Limpiar
                             </button>
                             <button type="button" id="cancelBtn" class="btn btn-danger">
@@ -1584,10 +1591,10 @@
             { placa: "AI263GK", departamento: "Los Ruices", capacidad: 40 }
         ];
 
-        // Personal MSO inicial - CORREGIDO SEGÚN TU ESPECIFICACIÓN
+        // Personal MSO inicial - AHORA CON VEHÍCULOS ASIGNADOS Y CENTRO DE COSTO
         const personalMSOInicial = [
-            { nombre: "Anibal Loyato", cargo: "Vicepresidente", placa: "MFC71X", centroCosto: "MSO" },
-            { nombre: "Francisco Betancourt", cargo: "Gerente", placa: "AA079YA", centroCosto: "MSO" },
+            { nombre: "Anibal Loyato", cargo: "Vicepresidente", placa: "AA079YA", centroCosto: "MSO" },
+            { nombre: "Francisco Betancourt", cargo: "Gerente", placa: "MFC71X", centroCosto: "MSO" },
             { nombre: "Pedro Vivas", cargo: "VP", placa: "AD455CF", centroCosto: "MSO Tec" }
         ];
 
@@ -1722,6 +1729,7 @@
         // Cargar centros de costo
         function cargarCentrosCosto() {
             const centroCostoSelect = document.getElementById('centroCosto');
+            const editCentroCostoSelect = document.getElementById('editCentroCosto');
             const newMsoCentroCostoSelect = document.getElementById('newMsoCentroCosto');
             
             // Limpiar selects
@@ -1846,7 +1854,7 @@
             alert('Centro de costo eliminado exitosamente');
         }
 
-        // Configurar eventos - CORREGIDO
+        // Configurar eventos
         function configurarEventos() {
             // Navegación del menú
             document.querySelectorAll('.menu-btn').forEach(btn => {
@@ -1891,16 +1899,6 @@
                 document.querySelector('[data-section="nuevo"]').classList.remove('active');
             });
             
-            // Botón reset (limpiar)
-            document.getElementById('resetBtn').addEventListener('click', function() {
-                // Limpiar campos específicos
-                document.getElementById('nombreApellidoGroup').style.display = 'none';
-                document.getElementById('tipoMsoGroup').style.display = 'none';
-                document.getElementById('costoFleteGroup').style.display = 'none';
-                document.getElementById('tipoCombustible').disabled = false;
-                document.getElementById('centroCosto').disabled = false;
-            });
-            
             // Botón limpiar filtros
             document.getElementById('clearFilters').addEventListener('click', limpiarFiltros);
             
@@ -1933,80 +1931,76 @@
                 }
             });
             
-            // Departamento change event (para mostrar/ocultar campos de nombre y tipo MSO)
-            document.getElementById('departamento').addEventListener('change', function() {
-                const departamento = this.value;
-                const nombreApellidoGroup = document.getElementById('nombreApellidoGroup');
-                const tipoMsoGroup = document.getElementById('tipoMsoGroup');
-                const nombreApellidoInput = document.getElementById('nombreApellido');
-                const tipoMsoSelect = document.getElementById('tipoMso');
-                const tipoCombustibleSelect = document.getElementById('tipoCombustible');
+            // Tipo de personal (supervisor/MSO)
+            document.getElementById('tipoPersonal').addEventListener('change', function() {
+                const msoGroup = document.getElementById('msoGroup');
+                const supervisorGroup = document.getElementById('supervisorGroup');
+                const supervisorInput = document.getElementById('supervisor');
+                const msoSelect = document.getElementById('msoPersona');
+                const placaInput = document.getElementById('placa');
+                const litrosInput = document.getElementById('litros');
+                const departamentoSelect = document.getElementById('departamento');
                 const centroCostoSelect = document.getElementById('centroCosto');
                 
-                // Mostrar campo de nombre y apellido para cualquier departamento seleccionado
-                if (departamento) {
-                    nombreApellidoGroup.style.display = 'block';
-                    nombreApellidoInput.required = true;
+                if (this.value === 'mso') {
+                    msoGroup.style.display = 'block';
+                    supervisorGroup.style.display = 'none';
+                    supervisorInput.required = false;
+                    msoSelect.required = true;
                     
-                    // Si es MSO, mostrar select para tipo de MSO
-                    if (departamento === 'MSO') {
-                        tipoMsoGroup.style.display = 'block';
-                        tipoMsoSelect.required = true;
-                        nombreApellidoInput.placeholder = "Ej: Anibal Loyato";
-                        
-                        // Para MSO, tipo de combustible debe ser gasolina
-                        tipoCombustibleSelect.value = 'gasolina';
-                        tipoCombustibleSelect.disabled = true;
-                        
-                        // Establecer centro de costo como MSO automáticamente
-                        centroCostoSelect.value = 'MSO';
-                        centroCostoSelect.disabled = true;
-                    } else {
-                        tipoMsoGroup.style.display = 'none';
-                        tipoMsoSelect.required = false;
-                        nombreApellidoInput.placeholder = "Ej: Juan Pérez (Supervisor)";
-                        
-                        // Habilitar tipo de combustible
-                        tipoCombustibleSelect.disabled = false;
-                        
-                        // Habilitar centro de costo
-                        centroCostoSelect.disabled = false;
-                        
-                        // Sincronizar departamento con centro de costo
-                        let centroCostoCorrespondiente = '';
-                        
-                        if (departamento === 'Los Ruices') {
-                            centroCostoCorrespondiente = 'C.O Los Ruices';
-                        } else if (departamento === 'El Rosal') {
-                            centroCostoCorrespondiente = 'C.O El Rosal';
-                        } else if (departamento === 'La Naya') {
-                            centroCostoCorrespondiente = 'C.O La Naya';
-                        } else if (departamento === 'El Paraiso') {
-                            centroCostoCorrespondiente = 'C.O El Paraiso';
-                        } else if (departamento === 'Comerciales') {
-                            centroCostoCorrespondiente = 'Departamento Comercial';
-                        } else {
-                            centroCostoCorrespondiente = departamento;
+                    // Configurar la placa como solo lectura y establecer el valor cuando se seleccione MSO
+                    placaInput.readOnly = true;
+                    placaInput.value = '';
+                    
+                    // Configurar litros para solo permitir gasolina para MSO
+                    const tipoCombustibleSelect = document.getElementById('tipoCombustible');
+                    tipoCombustibleSelect.value = 'gasolina';
+                    tipoCombustibleSelect.disabled = true;
+                    
+                    // Establecer departamento como MSO automáticamente
+                    departamentoSelect.value = 'MSO';
+                    departamentoSelect.disabled = true;
+                    
+                    // Establecer centro de costo como MSO automáticamente
+                    centroCostoSelect.value = 'MSO';
+                    centroCostoSelect.disabled = true;
+                    
+                    // Cuando se selecciona un MSO, autocompletar la placa y enfocar en litros
+                    msoSelect.addEventListener('change', function() {
+                        if (this.value) {
+                            const personaMSO = personalMSO.find(p => p.nombre === this.value);
+                            if (personaMSO && personaMSO.placa) {
+                                placaInput.value = personaMSO.placa;
+                                
+                                // Establecer centro de costo según el MSO
+                                centroCostoSelect.value = personaMSO.centroCosto;
+                                
+                                // Enfocar en el campo de litros para facilitar la entrada
+                                setTimeout(() => {
+                                    litrosInput.focus();
+                                }, 100);
+                            }
                         }
-                        
-                        // Verificar si existe en la lista de centros de costo
-                        const existe = Array.from(centroCostoSelect.options).some(option => option.value === centroCostoCorrespondiente);
-                        
-                        if (existe) {
-                            centroCostoSelect.value = centroCostoCorrespondiente;
-                        } else {
-                            // Si no existe, dejar en blanco
-                            centroCostoSelect.value = '';
-                        }
-                    }
+                    });
                 } else {
-                    // Si no hay departamento seleccionado, ocultar todo
-                    nombreApellidoGroup.style.display = 'none';
-                    tipoMsoGroup.style.display = 'none';
-                    nombreApellidoInput.required = false;
-                    tipoMsoSelect.required = false;
+                    msoGroup.style.display = 'none';
+                    supervisorGroup.style.display = 'block';
+                    supervisorInput.required = true;
+                    msoSelect.required = false;
+                    placaInput.readOnly = false;
+                    
+                    // Habilitar tipo de combustible
+                    const tipoCombustibleSelect = document.getElementById('tipoCombustible');
                     tipoCombustibleSelect.disabled = false;
+                    
+                    // Habilitar departamento y centro de costo
+                    departamentoSelect.disabled = false;
                     centroCostoSelect.disabled = false;
+                    
+                    // Limpiar valores
+                    placaInput.value = '';
+                    departamentoSelect.value = '';
+                    centroCostoSelect.value = '';
                 }
             });
             
@@ -2021,11 +2015,33 @@
                 }
             });
             
-            // Autocompletado para placa
+            // Autocompletado para supervisor
+            const supervisorInput = document.getElementById('supervisor');
+            const supervisorResults = document.getElementById('supervisorResults');
+            
+            supervisorInput.addEventListener('input', function() {
+                const query = this.value.toUpperCase();
+                if (query.length < 2) {
+                    supervisorResults.style.display = 'none';
+                    return;
+                }
+                
+                const filtered = supervisores.filter(s => s.includes(query));
+                mostrarAutocompletado(supervisorResults, filtered, query);
+            });
+            
+            // Autocompletado para placa (solo para supervisores)
             const placaInput = document.getElementById('placa');
             const placaResults = document.getElementById('placaResults');
             
             placaInput.addEventListener('input', function() {
+                // Solo activar autocompletado si es supervisor
+                const tipoPersonal = document.getElementById('tipoPersonal').value;
+                if (tipoPersonal === 'mso') {
+                    placaResults.style.display = 'none';
+                    return;
+                }
+                
                 const query = this.value.toUpperCase();
                 if (query.length < 1) {
                     placaResults.style.display = 'none';
@@ -2072,7 +2088,7 @@
             document.getElementById('exportPdf').addEventListener('click', exportarPDF);
             document.getElementById('exportExcel').addEventListener('click', exportarExcel);
             
-            // Modal - cerrar
+            // Modal
             document.querySelectorAll('.close-modal').forEach(btn => {
                 btn.addEventListener('click', cerrarModal);
             });
@@ -2153,6 +2169,41 @@
             document.getElementById('cancelarCentrosCostoBtn').addEventListener('click', function() {
                 document.getElementById('centrosCostoModal').style.display = 'none';
             });
+            
+            // Sincronizar departamento con centro de costo
+            document.getElementById('departamento').addEventListener('change', function() {
+                const departamento = this.value;
+                const centroCostoSelect = document.getElementById('centroCosto');
+                
+                if (departamento) {
+                    // Buscar el centro de costo correspondiente
+                    let centroCostoCorrespondiente = '';
+                    
+                    if (departamento === 'Los Ruices') {
+                        centroCostoCorrespondiente = 'C.O Los Ruices';
+                    } else if (departamento === 'El Rosal') {
+                        centroCostoCorrespondiente = 'C.O El Rosal';
+                    } else if (departamento === 'La Naya') {
+                        centroCostoCorrespondiente = 'C.O La Naya';
+                    } else if (departamento === 'El Paraiso') {
+                        centroCostoCorrespondiente = 'C.O El Paraiso';
+                    } else if (departamento === 'Comerciales') {
+                        centroCostoCorrespondiente = 'Departamento Comercial';
+                    } else {
+                        centroCostoCorrespondiente = departamento;
+                    }
+                    
+                    // Verificar si existe en la lista de centros de costo
+                    const existe = Array.from(centroCostoSelect.options).some(option => option.value === centroCostoCorrespondiente);
+                    
+                    if (existe) {
+                        centroCostoSelect.value = centroCostoCorrespondiente;
+                    } else {
+                        // Si no existe, dejar en blanco
+                        centroCostoSelect.value = '';
+                    }
+                }
+            });
         }
 
         // Mostrar sección específica
@@ -2163,10 +2214,7 @@
             });
             
             // Mostrar la sección seleccionada
-            const seccion = document.getElementById(sectionId);
-            if (seccion) {
-                seccion.classList.add('active');
-            }
+            document.getElementById(sectionId).classList.add('active');
             
             // Actualizar el menú activo
             document.querySelectorAll('.menu-btn').forEach(btn => {
@@ -2187,10 +2235,8 @@
                 day: 'numeric'
             };
             
-            const dateTimeElement = document.getElementById('currentDateTime');
-            if (dateTimeElement) {
-                dateTimeElement.textContent = now.toLocaleDateString('es-ES', options);
-            }
+            document.getElementById('currentDateTime').textContent = 
+                now.toLocaleDateString('es-ES', options);
         }
 
         // Generar opciones de fecha para reportes
@@ -2198,8 +2244,6 @@
             const weekSelect = document.getElementById('reportWeek');
             const monthSelect = document.getElementById('reportMonth');
             const yearSelect = document.getElementById('reportYear');
-            
-            if (!weekSelect || !monthSelect || !yearSelect) return;
             
             // Generar semanas del año actual
             const currentDate = new Date();
@@ -2234,16 +2278,12 @@
                 monthSelect.appendChild(option);
             });
             
-            // Generar años (desde 2025 hasta el año en curso + 2 años futuros)
-            const currentYearNow = currentDate.getFullYear();
-            const startYear = 2025;
-            const endYear = currentYearNow + 2; // Año actual + 2 años futuros
-            
-            for (let year = startYear; year <= endYear; year++) {
+            // Generar años (2023-2025)
+            for (let year = 2023; year <= 2025; year++) {
                 const option = document.createElement('option');
                 option.value = year;
                 option.textContent = year;
-                if (year === currentYearNow) {
+                if (year === currentYear) {
                     option.selected = true;
                 }
                 yearSelect.appendChild(option);
@@ -2278,15 +2318,23 @@
 
         // Cargar personal MSO en el select
         function cargarPersonalMSO() {
-            // Esta función ya no es necesaria para el formulario principal
-            // pero se mantiene para el formulario de edición si es necesario
+            const msoSelect = document.getElementById('msoPersona');
+            
+            // Limpiar select
+            msoSelect.innerHTML = '<option value="">Seleccione...</option>';
+            
+            // Agregar cada persona MSO
+            personalMSO.forEach(persona => {
+                const option = document.createElement('option');
+                option.value = persona.nombre;
+                option.textContent = `${persona.nombre} (${persona.cargo}) - ${persona.placa}`;
+                msoSelect.appendChild(option);
+            });
         }
 
         // Actualizar lista de MSO en la interfaz
         function actualizarListaMSO() {
             const msoListContainer = document.getElementById('msoListContainer');
-            
-            if (!msoListContainer) return;
             
             // Limpiar contenedor
             msoListContainer.innerHTML = '';
@@ -2375,8 +2423,6 @@
 
         // Mostrar autocompletado para placas
         function mostrarAutocompletadoPlaca(container, resultados, query) {
-            if (!container) return;
-            
             container.innerHTML = '';
             
             if (resultados.length === 0) {
@@ -2394,16 +2440,13 @@
                     </div>
                 `;
                 div.addEventListener('click', function() {
-                    const placaInput = document.getElementById('placa');
-                    if (placaInput) {
-                        placaInput.value = vehiculo.placa;
-                    }
+                    document.getElementById('placa').value = vehiculo.placa;
                     
                     // Si el departamento no está definido, usar el del vehículo
                     const departamentoSelect = document.getElementById('departamento');
                     const centroCostoSelect = document.getElementById('centroCosto');
                     
-                    if (departamentoSelect && departamentoSelect.value === '' && departamentos.includes(vehiculo.departamento)) {
+                    if (departamentoSelect.value === '' && departamentos.includes(vehiculo.departamento)) {
                         departamentoSelect.value = vehiculo.departamento;
                         
                         // También establecer el centro de costo correspondiente
@@ -2422,7 +2465,7 @@
                             centroCostoCorrespondiente = vehiculo.departamento;
                         }
                         
-                        if (centroCostoSelect && centrosCosto.includes(centroCostoCorrespondiente)) {
+                        if (centrosCosto.includes(centroCostoCorrespondiente)) {
                             centroCostoSelect.value = centroCostoCorrespondiente;
                         }
                     }
@@ -2435,34 +2478,45 @@
             container.style.display = 'block';
         }
 
-        // Guardar nuevo registro
+        // Guardar nuevo registro - VERSIÓN CORREGIDA
         function guardarRegistro(e) {
             e.preventDefault();
             
             // Obtener valores del formulario
-            const departamento = document.getElementById('departamento').value;
-            const nombreApellido = document.getElementById('nombreApellido').value.trim().toUpperCase();
+            const tipoPersonal = document.getElementById('tipoPersonal').value;
+            let supervisor;
             
-            if (!nombreApellido) {
-                alert('Por favor ingrese el nombre y apellido del solicitante');
-                return;
+            if (tipoPersonal === 'mso') {
+                supervisor = document.getElementById('msoPersona').value;
+            } else {
+                supervisor = document.getElementById('supervisor').value;
             }
             
-            // Obtener tipo de MSO si el departamento es MSO
-            let tipoMso = '';
-            if (departamento === 'MSO') {
-                tipoMso = document.getElementById('tipoMso').value;
-                if (!tipoMso) {
-                    alert('Por favor seleccione el tipo de Personal MSO');
-                    return;
-                }
+            // Validar que el supervisor esté en la lista
+            if (tipoPersonal === 'supervisor' && !supervisores.includes(supervisor.toUpperCase())) {
+                alert('Por favor seleccione un supervisor válido de la lista');
+                return;
             }
             
             // Validar que la placa esté en la lista de vehículos
             const placa = document.getElementById('placa').value.toUpperCase();
             const vehiculo = vehiculos.find(v => v.placa === placa);
             
-            if (!vehiculo) {
+            // Para MSO, verificar que la placa coincida con la asignada
+            if (tipoPersonal === 'mso') {
+                const personaMSO = personalMSO.find(p => p.nombre === supervisor);
+                if (personaMSO && personaMSO.placa !== placa) {
+                    alert(`Error: El personal MSO ${supervisor} tiene asignado el vehículo ${personaMSO.placa}, no ${placa}`);
+                    return;
+                }
+                
+                // Para MSO, el tipo de combustible debe ser gasolina
+                const tipoCombustible = document.getElementById('tipoCombustible').value;
+                if (tipoCombustible !== 'gasolina') {
+                    alert('Error: El personal MSO solo puede solicitar gasolina');
+                    return;
+                }
+            } else if (!vehiculo) {
                 if (!confirm('Esta placa no está registrada en el sistema. ¿Desea continuar de todos modos?')) {
                     return;
                 }
@@ -2482,21 +2536,29 @@
                 costoFlete = parseFloat(document.getElementById('costoFlete').value) || 0;
             }
             
-            // Crear nuevo registro
+            // OBTENER FECHA - SIEMPRE USAR LA FECHA ACTUAL A MENOS QUE EL USUARIO HAYA CAMBIADO MANUALMENTE
+            let fechaInput = document.getElementById('fecha').value;
+            
+            // Si el campo de fecha está vacío o no es válido, usar la fecha actual
+            if (!fechaInput) {
+                const ahora = new Date();
+                fechaInput = ahora.toISOString().slice(0, 10);
+            }
+            
+            // Crear nuevo registro CON LA FECHA CORRECTA
             const nuevoRegistro = {
                 id: nextId++,
                 numeroOrden: document.getElementById('numeroOrden').value,
-                fecha: document.getElementById('fecha').value,
+                fecha: fechaInput, // Usar la fecha del input (o la actual si está vacía)
                 placa: placa,
-                departamento: departamento,
+                departamento: document.getElementById('departamento').value,
                 centroCosto: centroCosto,
-                supervisor: nombreApellido,
+                supervisor: supervisor,
                 tipoCombustible: tipoCombustible,
                 litros: parseFloat(document.getElementById('litros').value),
                 costoFlete: costoFlete,
                 observaciones: document.getElementById('observaciones').value,
-                tipoPersonal: departamento === 'MSO' ? 'mso' : 'supervisor',
-                tipoMso: tipoMso
+                tipoPersonal: tipoPersonal
             };
             
             // Agregar a la lista de registros
@@ -2513,38 +2575,33 @@
             // Limpiar formulario
             document.getElementById('nuevoRegistroForm').reset();
             
-            // Establecer fecha actual
+            // Establecer fecha actual por defecto
             const ahora = new Date();
             document.getElementById('fecha').value = ahora.toISOString().slice(0, 10);
             
-            // Habilitar tipo de combustible si estaba deshabilitado
+            // Restablecer valores por defecto
+            document.getElementById('tipoPersonal').value = '';
             document.getElementById('tipoCombustible').disabled = false;
-            
-            // Habilitar centro de costo si estaba deshabilitado
+            document.getElementById('placa').readOnly = false;
+            document.getElementById('departamento').disabled = false;
             document.getElementById('centroCosto').disabled = false;
-            
-            // Ocultar costo flete
             document.getElementById('costoFleteGroup').style.display = 'none';
-            
-            // Ocultar campos de nombre y tipo MSO
-            document.getElementById('nombreApellidoGroup').style.display = 'none';
-            document.getElementById('tipoMsoGroup').style.display = 'none';
+            document.getElementById('msoGroup').style.display = 'none';
+            document.getElementById('supervisorGroup').style.display = 'block';
+            document.getElementById('supervisor').required = true;
             
             // Regresar a la sección de registros
             mostrarSeccion('registros');
             document.querySelector('[data-section="registros"]').classList.add('active');
-            document.querySelector('[data-section="nuevo"]').classList.remove('active');
         }
 
         // Actualizar tabla de registros
         function actualizarTablaRegistros() {
             const tableBody = document.getElementById('registrosTableBody');
-            if (!tableBody) return;
-            
-            const filterSupervisor = document.getElementById('filterSupervisor') ? document.getElementById('filterSupervisor').value.toLowerCase() : '';
-            const filterDept = document.getElementById('filterDept') ? document.getElementById('filterDept').value : '';
-            const filterPlaca = document.getElementById('filterPlaca') ? document.getElementById('filterPlaca').value.toLowerCase() : '';
-            const filterDate = document.getElementById('filterDate') ? document.getElementById('filterDate').value : '';
+            const filterSupervisor = document.getElementById('filterSupervisor').value.toLowerCase();
+            const filterDept = document.getElementById('filterDept').value;
+            const filterPlaca = document.getElementById('filterPlaca').value.toLowerCase();
+            const filterDate = document.getElementById('filterDate').value;
             
             // Filtrar registros
             let registrosFiltrados = registros.filter(registro => {
@@ -2589,23 +2646,13 @@
                     costo = (registro.litros * PRECIOS.gasoil) + (registro.costoFlete || 0);
                 }
                 
-                // Determinar el texto para mostrar en la columna supervisor
-                let supervisorTexto = registro.supervisor;
-                if (registro.tipoPersonal === 'mso') {
-                    if (registro.tipoMso) {
-                        supervisorTexto = `${registro.supervisor} <span class="mso-badge">${registro.tipoMso}</span>`;
-                    } else {
-                        supervisorTexto = `${registro.supervisor} <span class="mso-badge">MSO</span>`;
-                    }
-                }
-                
                 row.innerHTML = `
                     <td>${registro.numeroOrden}</td>
                     <td>${fechaFormateada}</td>
                     <td>${registro.placa}</td>
                     <td>${registro.departamento}</td>
                     <td>${registro.centroCosto}</td>
-                    <td>${supervisorTexto}</td>
+                    <td>${registro.supervisor} ${registro.tipoPersonal === 'mso' ? '<span class="mso-badge">MSO</span>' : ''}</td>
                     <td>${registro.tipoCombustible.charAt(0).toUpperCase() + registro.tipoCombustible.slice(1)}</td>
                     <td>${registro.litros.toFixed(2)} <span class="cost-badge">$${costo.toFixed(2)}</span></td>
                     <td>${registro.tipoCombustible === 'gasoil' && registro.costoFlete > 0 ? `$${registro.costoFlete.toFixed(2)}` : '-'}</td>
@@ -2641,26 +2688,19 @@
             });
             
             // Actualizar contador
-            const totalRecordsElement = document.getElementById('totalRecords');
-            if (totalRecordsElement) {
-                totalRecordsElement.textContent = registrosFiltrados.length;
-            }
+            document.getElementById('totalRecords').textContent = registrosFiltrados.length;
             
             // Actualizar último número de orden
-            const lastOrderElement = document.getElementById('lastOrder');
-            if (lastOrderElement && registrosFiltrados.length > 0) {
+            if (registrosFiltrados.length > 0) {
                 const lastOrder = registrosFiltrados[0].numeroOrden;
-                lastOrderElement.textContent = lastOrder;
+                document.getElementById('lastOrder').textContent = lastOrder;
             }
         }
 
         // Actualizar tabla de supervisores
         function actualizarTablaSupervisores() {
             const tableBody = document.getElementById('supervisorsTableBody');
-            if (!tableBody) return;
-            
-            const searchElement = document.getElementById('searchSupervisor');
-            const searchTerm = searchElement ? searchElement.value.toUpperCase() : '';
+            const searchTerm = document.getElementById('searchSupervisor').value.toUpperCase();
             
             // Limpiar tabla
             tableBody.innerHTML = '';
@@ -2715,45 +2755,29 @@
         function actualizarEstadisticas() {
             // Calcular litros totales
             const totalLiters = registros.reduce((sum, registro) => sum + registro.litros, 0);
-            const totalLitersElement = document.getElementById('totalLiters');
-            if (totalLitersElement) {
-                totalLitersElement.textContent = totalLiters.toFixed(2);
-            }
+            document.getElementById('totalLiters').textContent = totalLiters.toFixed(2);
             
             // Calcular registros de hoy
             const hoy = new Date().toISOString().split('T')[0];
             const todayRecords = registros.filter(registro => 
                 registro.fecha === hoy
             ).length;
-            
-            const todayRecordsElement = document.getElementById('todayRecords');
-            if (todayRecordsElement) {
-                todayRecordsElement.textContent = todayRecords;
-            }
+            document.getElementById('todayRecords').textContent = todayRecords;
             
             // Actualizar número total de registros
-            const totalRecordsElement = document.getElementById('totalRecords');
-            if (totalRecordsElement) {
-                totalRecordsElement.textContent = registros.length;
-            }
+            document.getElementById('totalRecords').textContent = registros.length;
             
             // Actualizar último número de orden
-            const lastOrderElement = document.getElementById('lastOrder');
-            if (lastOrderElement && registros.length > 0) {
+            if (registros.length > 0) {
                 const lastOrder = registros[registros.length - 1].numeroOrden;
-                lastOrderElement.textContent = lastOrder;
+                document.getElementById('lastOrder').textContent = lastOrder;
             }
         }
 
         // Generar reporte semanal
         function generarReporteSemanal() {
-            const weekSelect = document.getElementById('reportWeek');
-            const yearSelect = document.getElementById('reportYear');
-            
-            if (!weekSelect || !yearSelect) return;
-            
-            const week = parseInt(weekSelect.value);
-            const year = parseInt(yearSelect.value);
+            const week = parseInt(document.getElementById('reportWeek').value);
+            const year = parseInt(document.getElementById('reportYear').value);
             
             // Obtener fechas de la semana
             const weekDates = getWeekDates(year, week);
@@ -2761,15 +2785,7 @@
             const endDate = weekDates.end.toISOString().split('T')[0];
             
             // Actualizar rango de semana en la interfaz
-            const weekRangeElement = document.getElementById('weekRange');
-            if (weekRangeElement) {
-                weekRangeElement.textContent = `${weekDates.start.toLocaleDateString('es-ES', {day: '2-digit', month: '2-digit'})} - ${weekDates.end.toLocaleDateString('es-ES', {day: '2-digit', month: '2-digit'})}`;
-            }
-            
-            // Mostrar sección semanal
-            document.getElementById('weeklyReportSection').style.display = 'block';
-            document.getElementById('monthlyReportSection').style.display = 'none';
-            document.getElementById('monthlyGasoilSection').style.display = 'none';
+            document.getElementById('weekRange').textContent = `${weekDates.start.toLocaleDateString('es-ES', {day: '2-digit', month: '2-digit'})} - ${weekDates.end.toLocaleDateString('es-ES', {day: '2-digit', month: '2-digit'})}`;
             
             // Filtrar registros de la semana seleccionada
             const registrosSemanales = registros.filter(registro => {
@@ -2789,18 +2805,8 @@
 
         // Generar reporte mensual
         function generarReporteMensual() {
-            const monthSelect = document.getElementById('reportMonth');
-            const yearSelect = document.getElementById('reportYear');
-            
-            if (!monthSelect || !yearSelect) return;
-            
-            const month = parseInt(monthSelect.value);
-            const year = parseInt(yearSelect.value);
-            
-            // Mostrar secciones mensuales
-            document.getElementById('weeklyReportSection').style.display = 'none';
-            document.getElementById('monthlyReportSection').style.display = 'block';
-            document.getElementById('monthlyGasoilSection').style.display = 'block';
+            const month = parseInt(document.getElementById('reportMonth').value);
+            const year = parseInt(document.getElementById('reportYear').value);
             
             // Filtrar registros del mes y año seleccionados
             const registrosMensuales = registros.filter(registro => {
@@ -2820,15 +2826,7 @@
 
         // Generar reporte anual
         function generarReporteAnual() {
-            const yearSelect = document.getElementById('reportYear');
-            if (!yearSelect) return;
-            
-            const year = parseInt(yearSelect.value);
-            
-            // Mostrar secciones mensuales (para anual usamos las mismas tablas)
-            document.getElementById('weeklyReportSection').style.display = 'none';
-            document.getElementById('monthlyReportSection').style.display = 'block';
-            document.getElementById('monthlyGasoilSection').style.display = 'block';
+            const year = parseInt(document.getElementById('reportYear').value);
             
             // Filtrar registros del año seleccionado
             const registrosAnuales = registros.filter(registro => {
@@ -2983,7 +2981,6 @@
         // Actualizar costos por centro de costo
         function actualizarCostosPorCentroCosto(registrosFiltrados) {
             const container = document.getElementById('costosPorCentroCosto');
-            if (!container) return;
             
             // Agrupar por centro de costo
             const costosPorCentro = {};
@@ -3086,29 +3083,15 @@
             const gasoilTotal = gasoilCombustible + gasoilFlete;
             const gasoilDiario = gasoilTotal / totalDias;
             
-            const weeklyGasolinaTotalLiters = document.getElementById('weeklyGasolinaTotalLiters');
-            if (weeklyGasolinaTotalLiters) weeklyGasolinaTotalLiters.textContent = gasolinaLitros.toFixed(2);
+            document.getElementById('weeklyGasolinaTotalLiters').textContent = gasolinaLitros.toFixed(2);
+            document.getElementById('weeklyGasolinaTotalCost').textContent = `$${gasolinaCosto.toFixed(2)}`;
+            document.getElementById('weeklyGasolinaDailyAvg').textContent = `$${gasolinaDiario.toFixed(2)}`;
             
-            const weeklyGasolinaTotalCost = document.getElementById('weeklyGasolinaTotalCost');
-            if (weeklyGasolinaTotalCost) weeklyGasolinaTotalCost.textContent = `$${gasolinaCosto.toFixed(2)}`;
-            
-            const weeklyGasolinaDailyAvg = document.getElementById('weeklyGasolinaDailyAvg');
-            if (weeklyGasolinaDailyAvg) weeklyGasolinaDailyAvg.textContent = `$${gasolinaDiario.toFixed(2)}`;
-            
-            const weeklyGasoilTotalLiters = document.getElementById('weeklyGasoilTotalLiters');
-            if (weeklyGasoilTotalLiters) weeklyGasoilTotalLiters.textContent = gasoilLitros.toFixed(2);
-            
-            const weeklyGasoilFuelCost = document.getElementById('weeklyGasoilFuelCost');
-            if (weeklyGasoilFuelCost) weeklyGasoilFuelCost.textContent = `$${gasoilCombustible.toFixed(2)}`;
-            
-            const weeklyGasoilFleteCost = document.getElementById('weeklyGasoilFleteCost');
-            if (weeklyGasoilFleteCost) weeklyGasoilFleteCost.textContent = `$${gasoilFlete.toFixed(2)}`;
-            
-            const weeklyGasoilTotalCost = document.getElementById('weeklyGasoilTotalCost');
-            if (weeklyGasoilTotalCost) weeklyGasoilTotalCost.textContent = `$${gasoilTotal.toFixed(2)}`;
-            
-            const weeklyGasoilDailyAvg = document.getElementById('weeklyGasoilDailyAvg');
-            if (weeklyGasoilDailyAvg) weeklyGasoilDailyAvg.textContent = `$${gasoilDiario.toFixed(2)}`;
+            document.getElementById('weeklyGasoilTotalLiters').textContent = gasoilLitros.toFixed(2);
+            document.getElementById('weeklyGasoilFuelCost').textContent = `$${gasoilCombustible.toFixed(2)}`;
+            document.getElementById('weeklyGasoilFleteCost').textContent = `$${gasoilFlete.toFixed(2)}`;
+            document.getElementById('weeklyGasoilTotalCost').textContent = `$${gasoilTotal.toFixed(2)}`;
+            document.getElementById('weeklyGasoilDailyAvg').textContent = `$${gasoilDiario.toFixed(2)}`;
         }
 
         // Actualizar tablas de reporte mensual separadas
@@ -3127,7 +3110,6 @@
         // Actualizar tabla de gasolina
         function actualizarTablaGasolina(registrosGasolina) {
             const tableBody = document.getElementById('monthlyGasolinaBody');
-            if (!tableBody) return;
             
             // Agrupar por centro de costo
             const reportePorCentroCosto = {};
@@ -3199,7 +3181,6 @@
         // Actualizar tabla de gasoil
         function actualizarTablaGasoil(registrosGasoil) {
             const tableBody = document.getElementById('monthlyGasoilBody');
-            if (!tableBody) return;
             
             // Agrupar por centro de costo
             const reportePorCentroCosto = {};
@@ -3294,8 +3275,6 @@
         // Actualizar tabla anual de gasolina
         function actualizarTablaAnualGasolina(registrosGasolina, year) {
             const tableBody = document.getElementById('monthlyGasolinaBody');
-            if (!tableBody) return;
-            
             const meses = [
                 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
                 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
@@ -3373,8 +3352,6 @@
         // Actualizar tabla anual de gasoil
         function actualizarTablaAnualGasoil(registrosGasoil, year) {
             const tableBody = document.getElementById('monthlyGasoilBody');
-            if (!tableBody) return;
-            
             const meses = [
                 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
                 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
@@ -3468,8 +3445,6 @@
             
             // Crear formulario de edición
             const modalBody = document.querySelector('#editModal .modal-body');
-            if (!modalBody) return;
-            
             modalBody.innerHTML = `
                 <form id="editForm">
                     <div class="form-row">
@@ -3500,30 +3475,38 @@
                         </div>
                     </div>
                     
-                    <div class="form-row" id="editNombreApellidoRow" style="display: flex;">
+                    <div class="form-row">
                         <div class="form-group">
-                            <label for="editNombreApellido">Nombre y Apellido *</label>
-                            <input type="text" id="editNombreApellido" value="${registro.supervisor}" required>
+                            <label for="editPlaca">Placa del Vehículo *</label>
+                            <input type="text" id="editPlaca" value="${registro.placa}" required ${registro.tipoPersonal === 'mso' ? 'readonly' : ''}>
                         </div>
-                        
-                        <div class="form-group" id="editTipoMsoGroup" style="${registro.departamento === 'MSO' ? 'display: block;' : 'display: none;'}">
-                            <label for="editTipoMso">Tipo de Personal MSO</label>
-                            <select id="editTipoMso">
+                        <div class="form-group">
+                            <label for="editTipoPersonal">Tipo de Personal</label>
+                            <select id="editTipoPersonal">
+                                <option value="supervisor" ${registro.tipoPersonal === 'supervisor' ? 'selected' : ''}>Supervisor</option>
+                                <option value="mso" ${registro.tipoPersonal === 'mso' ? 'selected' : ''}>Personal MSO</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group" id="editSupervisorGroup" style="${registro.tipoPersonal === 'supervisor' ? 'display: block;' : 'display: none;'}">
+                            <label for="editSupervisor">Supervisor</label>
+                            <input type="text" id="editSupervisor" value="${registro.supervisor}" ${registro.tipoPersonal === 'supervisor' ? 'required' : ''}>
+                        </div>
+                        <div class="form-group" id="editMsoGroup" style="${registro.tipoPersonal === 'mso' ? 'display: block;' : 'display: none;'}">
+                            <label for="editMsoPersona">Personal MSO</label>
+                            <select id="editMsoPersona">
                                 <option value="">Seleccione...</option>
-                                <option value="Caracas" ${registro.tipoMso === 'Caracas' ? 'selected' : ''}>Personal MSO Caracas</option>
-                                <option value="Barquisimeto" ${registro.tipoMso === 'Barquisimeto' ? 'selected' : ''}>Personal MSO Barquisimeto</option>
+                                ${personalMSO.map(p => `<option value="${p.nombre}" ${registro.supervisor === p.nombre ? 'selected' : ''}>${p.nombre} (${p.cargo}) - ${p.placa}</option>`).join('')}
                             </select>
                         </div>
                     </div>
                     
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="editPlaca">Placa del Vehículo *</label>
-                            <input type="text" id="editPlaca" value="${registro.placa}" required>
-                        </div>
-                        <div class="form-group">
                             <label for="editTipoCombustible">Tipo de Combustible *</label>
-                            <select id="editTipoCombustible" required ${registro.departamento === 'MSO' ? 'disabled' : ''}>
+                            <select id="editTipoCombustible" required ${registro.tipoPersonal === 'mso' ? 'disabled' : ''}>
                                 <option value="gasolina" ${registro.tipoCombustible === 'gasolina' ? 'selected' : ''}>Gasolina</option>
                                 <option value="gasoil" ${registro.tipoCombustible === 'gasoil' ? 'selected' : ''}>Gasoil</option>
                             </select>
@@ -3560,113 +3543,123 @@
             document.getElementById('editModal').style.display = 'flex';
             
             // Configurar evento del formulario de edición
-            const editForm = document.getElementById('editForm');
-            if (editForm) {
-                editForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    guardarCambiosEdicion();
-                });
-            }
+            document.getElementById('editForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                guardarCambiosEdicion();
+            });
             
             // Configurar botón cancelar
-            const cancelEditBtn = document.getElementById('cancelEdit');
-            if (cancelEditBtn) {
-                cancelEditBtn.addEventListener('click', cerrarModal);
-            }
+            document.getElementById('cancelEdit').addEventListener('click', cerrarModal);
             
-            // Configurar cambio de departamento en edición
-            const editDepartamento = document.getElementById('editDepartamento');
-            if (editDepartamento) {
-                editDepartamento.addEventListener('change', function() {
-                    const departamento = this.value;
-                    const tipoMsoGroup = document.getElementById('editTipoMsoGroup');
-                    const tipoCombustibleSelect = document.getElementById('editTipoCombustible');
-                    const centroCostoSelect = document.getElementById('editCentroCosto');
-                    
-                    if (departamento) {
-                        // Si es MSO, mostrar select para tipo de MSO
-                        if (departamento === 'MSO') {
-                            if (tipoMsoGroup) tipoMsoGroup.style.display = 'block';
-                            
-                            // Para MSO, tipo de combustible debe ser gasolina
-                            if (tipoCombustibleSelect) {
-                                tipoCombustibleSelect.value = 'gasolina';
-                                tipoCombustibleSelect.disabled = true;
-                            }
-                            
-                            // Establecer centro de costo como MSO automáticamente
-                            if (centroCostoSelect) {
-                                centroCostoSelect.value = 'MSO';
-                                centroCostoSelect.disabled = true;
-                            }
-                        } else {
-                            if (tipoMsoGroup) tipoMsoGroup.style.display = 'none';
-                            
-                            // Habilitar tipo de combustible
-                            if (tipoCombustibleSelect) tipoCombustibleSelect.disabled = false;
-                            
-                            // Habilitar centro de costo
-                            if (centroCostoSelect) centroCostoSelect.disabled = false;
-                        }
-                    }
-                });
-            }
+            // Configurar cambio de tipo de personal en edición
+            document.getElementById('editTipoPersonal').addEventListener('change', function() {
+                const msoGroup = document.getElementById('editMsoGroup');
+                const supervisorGroup = document.getElementById('editSupervisorGroup');
+                const supervisorInput = document.getElementById('editSupervisor');
+                const msoSelect = document.getElementById('editMsoPersona');
+                const departamentoSelect = document.getElementById('editDepartamento');
+                const centroCostoSelect = document.getElementById('editCentroCosto');
+                const placaInput = document.getElementById('editPlaca');
+                const tipoCombustibleSelect = document.getElementById('editTipoCombustible');
+                
+                if (this.value === 'mso') {
+                    msoGroup.style.display = 'block';
+                    supervisorGroup.style.display = 'none';
+                    supervisorInput.required = false;
+                    msoSelect.required = true;
+                    departamentoSelect.value = 'MSO';
+                    departamentoSelect.disabled = true;
+                    centroCostoSelect.value = 'MSO';
+                    centroCostoSelect.disabled = true;
+                    placaInput.readOnly = true;
+                    tipoCombustibleSelect.value = 'gasolina';
+                    tipoCombustibleSelect.disabled = true;
+                } else {
+                    msoGroup.style.display = 'none';
+                    supervisorGroup.style.display = 'block';
+                    supervisorInput.required = true;
+                    msoSelect.required = false;
+                    departamentoSelect.disabled = false;
+                    centroCostoSelect.disabled = false;
+                    placaInput.readOnly = false;
+                    tipoCombustibleSelect.disabled = false;
+                }
+            });
             
             // Configurar cambio de tipo de combustible en edición
-            const editTipoCombustible = document.getElementById('editTipoCombustible');
-            if (editTipoCombustible) {
-                editTipoCombustible.addEventListener('change', function() {
-                    const costoFleteGroup = document.getElementById('editCostoFleteGroup');
-                    if (this.value === 'gasoil') {
-                        if (costoFleteGroup) costoFleteGroup.style.display = 'block';
-                    } else {
-                        if (costoFleteGroup) costoFleteGroup.style.display = 'none';
-                        const editCostoFlete = document.getElementById('editCostoFlete');
-                        if (editCostoFlete) editCostoFlete.value = '0';
+            document.getElementById('editTipoCombustible').addEventListener('change', function() {
+                const costoFleteGroup = document.getElementById('editCostoFleteGroup');
+                if (this.value === 'gasoil') {
+                    costoFleteGroup.style.display = 'block';
+                } else {
+                    costoFleteGroup.style.display = 'none';
+                    document.getElementById('editCostoFlete').value = '0';
+                }
+            });
+            
+            // Cuando se selecciona un MSO en edición, autocompletar la placa
+            document.getElementById('editMsoPersona').addEventListener('change', function() {
+                if (this.value) {
+                    const personaMSO = personalMSO.find(p => p.nombre === this.value);
+                    if (personaMSO && personaMSO.placa) {
+                        // Autocompletar la placa
+                        const placaInput = document.getElementById('editPlaca');
+                        placaInput.value = personaMSO.placa;
                     }
-                });
-            }
+                }
+            });
+            
+            // Sincronizar departamento con centro de costo en edición
+            document.getElementById('editDepartamento').addEventListener('change', function() {
+                const departamento = this.value;
+                const centroCostoSelect = document.getElementById('editCentroCosto');
+                
+                if (departamento) {
+                    // Buscar el centro de costo correspondiente
+                    let centroCostoCorrespondiente = '';
+                    
+                    if (departamento === 'Los Ruices') {
+                        centroCostoCorrespondiente = 'C.O Los Ruices';
+                    } else if (departamento === 'El Rosal') {
+                        centroCostoCorrespondiente = 'C.O El Rosal';
+                    } else if (departamento === 'La Naya') {
+                        centroCostoCorrespondiente = 'C.O La Naya';
+                    } else if (departamento === 'El Paraiso') {
+                        centroCostoCorrespondiente = 'C.O El Paraiso';
+                    } else if (departamento === 'Comerciales') {
+                        centroCostoCorrespondiente = 'Departamento Comercial';
+                    } else {
+                        centroCostoCorrespondiente = departamento;
+                    }
+                    
+                    // Verificar si existe en la lista de centros de costo
+                    const existe = Array.from(centroCostoSelect.options).some(option => option.value === centroCostoCorrespondiente);
+                    
+                    if (existe) {
+                        centroCostoSelect.value = centroCostoCorrespondiente;
+                    }
+                }
+            });
         }
 
-        // Guardar cambios de edición
+        // Guardar cambios de edición - VERSIÓN CORREGIDA
         function guardarCambiosEdicion() {
             const registroIndex = registros.findIndex(r => r.id === currentEditId);
             
             if (registroIndex === -1) return;
             
             // Obtener valores del formulario
-            const editDepartamento = document.getElementById('editDepartamento');
-            const editNombreApellido = document.getElementById('editNombreApellido');
-            const editTipoMso = document.getElementById('editTipoMso');
-            const editCentroCosto = document.getElementById('editCentroCosto');
-            const editTipoCombustible = document.getElementById('editTipoCombustible');
-            const editCostoFlete = document.getElementById('editCostoFlete');
+            const tipoPersonal = document.getElementById('editTipoPersonal').value;
+            let supervisor;
             
-            if (!editDepartamento || !editNombreApellido || !editCentroCosto || !editTipoCombustible) {
-                alert('Error: No se pudieron obtener los datos del formulario');
-                return;
-            }
-            
-            const departamento = editDepartamento.value;
-            const nombreApellido = editNombreApellido.value.trim().toUpperCase();
-            
-            if (!nombreApellido) {
-                alert('Por favor ingrese el nombre y apellido del solicitante');
-                return;
-            }
-            
-            // Obtener tipo de MSO si el departamento es MSO
-            let tipoMso = '';
-            if (departamento === 'MSO') {
-                tipoMso = editTipoMso ? editTipoMso.value : '';
-                if (!tipoMso) {
-                    alert('Por favor seleccione el tipo de Personal MSO');
-                    return;
-                }
+            if (tipoPersonal === 'mso') {
+                supervisor = document.getElementById('editMsoPersona').value;
+            } else {
+                supervisor = document.getElementById('editSupervisor').value;
             }
             
             // Validar centro de costo
-            const centroCosto = editCentroCosto.value;
+            const centroCosto = document.getElementById('editCentroCosto').value;
             if (!centrosCosto.includes(centroCosto)) {
                 alert('Por favor seleccione un centro de costo válido');
                 return;
@@ -3674,26 +3667,34 @@
             
             // Obtener costo flete
             let costoFlete = 0;
-            const tipoCombustible = editTipoCombustible.value;
+            const tipoCombustible = document.getElementById('editTipoCombustible').value;
             if (tipoCombustible === 'gasoil') {
-                costoFlete = editCostoFlete ? parseFloat(editCostoFlete.value) || 0 : 0;
+                costoFlete = parseFloat(document.getElementById('editCostoFlete').value) || 0;
             }
             
-            // Actualizar registro
+            // OBTENER FECHA - SIEMPRE USAR LA FECHA DEL INPUT
+            let fechaInput = document.getElementById('editFecha').value;
+            
+            // Si el campo de fecha está vacío o no es válido, usar la fecha actual
+            if (!fechaInput) {
+                const ahora = new Date();
+                fechaInput = ahora.toISOString().slice(0, 10);
+            }
+            
+            // Actualizar registro CON LA FECHA CORRECTA
             registros[registroIndex] = {
                 ...registros[registroIndex],
                 numeroOrden: document.getElementById('editNumeroOrden').value,
-                fecha: document.getElementById('editFecha').value,
+                fecha: fechaInput, // Usar la fecha procesada
                 placa: document.getElementById('editPlaca').value.toUpperCase(),
-                departamento: departamento,
+                departamento: document.getElementById('editDepartamento').value,
                 centroCosto: centroCosto,
-                supervisor: nombreApellido,
+                supervisor: supervisor,
                 tipoCombustible: tipoCombustible,
                 litros: parseFloat(document.getElementById('editLitros').value),
                 costoFlete: costoFlete,
                 observaciones: document.getElementById('editObservaciones').value,
-                tipoPersonal: departamento === 'MSO' ? 'mso' : 'supervisor',
-                tipoMso: tipoMso
+                tipoPersonal: tipoPersonal
             };
             
             // Actualizar interfaz
@@ -3702,7 +3703,7 @@
             actualizarTablaSupervisores();
             
             // Si estamos en la sección de reportes, actualizar
-            if (document.getElementById('reportes') && document.getElementById('reportes').classList.contains('active')) {
+            if (document.getElementById('reportes').classList.contains('active')) {
                 const reportType = document.getElementById('reportType').value;
                 if (reportType === 'semanal') {
                     generarReporteSemanal();
@@ -3723,10 +3724,7 @@
         // Confirmar eliminación
         function confirmarEliminacion(id) {
             currentEditId = id;
-            const confirmModal = document.getElementById('confirmModal');
-            if (confirmModal) {
-                confirmModal.style.display = 'flex';
-            }
+            document.getElementById('confirmModal').style.display = 'flex';
         }
 
         // Eliminar registro
@@ -3740,7 +3738,7 @@
                 actualizarTablaSupervisores();
                 
                 // Si estamos en la sección de reportes, actualizar
-                if (document.getElementById('reportes') && document.getElementById('reportes').classList.contains('active')) {
+                if (document.getElementById('reportes').classList.contains('active')) {
                     const reportType = document.getElementById('reportType').value;
                     if (reportType === 'semanal') {
                         generarReporteSemanal();
@@ -3759,31 +3757,19 @@
 
         // Cerrar modal
         function cerrarModal() {
-            const editModal = document.getElementById('editModal');
-            const confirmModal = document.getElementById('confirmModal');
-            const msoModal = document.getElementById('msoModal');
-            const centrosCostoModal = document.getElementById('centrosCostoModal');
-            
-            if (editModal) editModal.style.display = 'none';
-            if (confirmModal) confirmModal.style.display = 'none';
-            if (msoModal) msoModal.style.display = 'none';
-            if (centrosCostoModal) centrosCostoModal.style.display = 'none';
-            
+            document.getElementById('editModal').style.display = 'none';
+            document.getElementById('confirmModal').style.display = 'none';
+            document.getElementById('msoModal').style.display = 'none';
+            document.getElementById('centrosCostoModal').style.display = 'none';
             currentEditId = null;
         }
 
         // Limpiar filtros
         function limpiarFiltros() {
-            const filterSupervisor = document.getElementById('filterSupervisor');
-            const filterDept = document.getElementById('filterDept');
-            const filterPlaca = document.getElementById('filterPlaca');
-            const filterDate = document.getElementById('filterDate');
-            
-            if (filterSupervisor) filterSupervisor.value = '';
-            if (filterDept) filterDept.value = '';
-            if (filterPlaca) filterPlaca.value = '';
-            if (filterDate) filterDate.value = '';
-            
+            document.getElementById('filterSupervisor').value = '';
+            document.getElementById('filterDept').value = '';
+            document.getElementById('filterPlaca').value = '';
+            document.getElementById('filterDate').value = '';
             actualizarTablaRegistros();
         }
 
@@ -3867,7 +3853,6 @@
                     'Centro Costo': r.centroCosto,
                     'Supervisor': r.supervisor,
                     'Tipo Personal': r.tipoPersonal === 'mso' ? 'MSO' : 'Supervisor',
-                    'Tipo MSO': r.tipoMso || '',
                     'Tipo Combustible': r.tipoCombustible.charAt(0).toUpperCase() + r.tipoCombustible.slice(1),
                     'Litros': r.litros,
                     'Costo Flete': r.costoFlete || 0,
@@ -3888,7 +3873,6 @@
                 {wch: 20}, // Centro Costo
                 {wch: 20}, // Supervisor
                 {wch: 12}, // Tipo Personal
-                {wch: 15}, // Tipo MSO
                 {wch: 12}, // Tipo Combustible
                 {wch: 10}, // Litros
                 {wch: 12}, // Costo Flete
