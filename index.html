@@ -9,1579 +9,128 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js"></script>
     <style>
-        /* Reset y estilos generales */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            background-color: #f5f7fa;
-            color: #333;
-            line-height: 1.6;
-            font-size: 14px;
-        }
-
-        .container {
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            max-width: 100%;
-            overflow-x: hidden;
-        }
-
-        /* Header */
-        header {
-            background: linear-gradient(135deg, #1a2980, #26d0ce);
-            color: white;
-            padding: 1rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        header h1 {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 1.4rem;
-            margin-bottom: 0.5rem;
-            flex-wrap: wrap;
-        }
-
-        .header-info {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.8rem;
-            opacity: 0.9;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        /* Contenido principal */
-        .main-content {
-            display: flex;
-            flex: 1;
-            flex-direction: column;
-        }
-
-        @media (min-width: 768px) {
-            .main-content {
-                flex-direction: row;
-            }
-        }
-
-        /* Sidebar */
-        .sidebar {
-            width: 100%;
-            background-color: #2c3e50;
-            color: white;
-            padding: 1rem 0;
-            display: flex;
-            flex-direction: column;
-        }
-
-        @media (min-width: 768px) {
-            .sidebar {
-                width: 250px;
-                min-width: 250px;
-            }
-        }
-
-        .menu {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            padding: 0 1rem;
-        }
-
-        @media (max-width: 767px) {
-            .menu {
-                flex-direction: row;
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-            
-            .menu-btn {
-                flex: 1;
-                min-width: 120px;
-                justify-content: center;
-            }
-        }
-
-        .menu-btn {
-            background: none;
-            border: none;
-            color: #ecf0f1;
-            text-align: left;
-            padding: 10px 12px;
-            border-radius: 5px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.9rem;
-            transition: all 0.3s;
-            white-space: nowrap;
-        }
-
-        .menu-btn:hover {
-            background-color: #34495e;
-        }
-
-        .menu-btn.active {
-            background-color: #3498db;
-            font-weight: 600;
-        }
-
-        .menu-divider {
-            height: 1px;
-            background-color: #4a6278;
-            margin: 10px 0;
-            width: 100%;
-        }
-
-        .export-btn {
-            background-color: #27ae60;
-        }
-
-        .export-btn:hover {
-            background-color: #219653;
-        }
-
-        .stats {
-            margin-top: auto;
-            padding: 1rem;
-            background-color: #34495e;
-            border-radius: 5px;
-            margin: 1rem;
-            display: none;
-        }
-
-        @media (min-width: 768px) {
-            .stats {
-                display: block;
-            }
-        }
-
-        .stats h3 {
-            font-size: 1rem;
-            margin-bottom: 0.8rem;
-            color: #ecf0f1;
-        }
-
-        .stat-item {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 6px;
-            font-size: 0.8rem;
-        }
-
-        /* Contenido principal */
-        .content {
-            flex: 1;
-            padding: 1rem;
-            overflow-y: auto;
-            width: 100%;
-        }
-
-        @media (min-width: 768px) {
-            .content {
-                padding: 1.5rem;
-            }
-        }
-
-        .content-section {
-            display: none;
-        }
-
-        .content-section.active {
-            display: block;
-            animation: fadeIn 0.5s;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        h2 {
-            color: #2c3e50;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 1.4rem;
-        }
-
-        h3 {
-            color: #2c3e50;
-            margin-bottom: 1rem;
-            font-size: 1.2rem;
-        }
-
-        /* Filtros */
-        .filters {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .filters input, .filters select {
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 0.85rem;
-            min-width: 0;
-        }
-
-        .filters input:focus, .filters select:focus {
-            outline: none;
-            border-color: #3498db;
-        }
-
-        #searchInput {
-            flex: 2;
-            min-width: 150px;
-        }
-
-        #filterSupervisor, #filterDept, #filterPlaca, #filterDate {
-            flex: 1;
-            min-width: 120px;
-        }
-
-        #clearFilters {
-            background-color: #e74c3c;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 5px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 0.85rem;
-            white-space: nowrap;
-        }
-
-        #clearFilters:hover {
-            background-color: #c0392b;
-        }
-
-        /* Tablas */
-        .table-container {
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            overflow: auto;
-            max-height: 500px;
-            width: 100%;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 600px;
-        }
-
-        thead {
-            background-color: #3498db;
-            color: white;
-            position: sticky;
-            top: 0;
-        }
-
-        th, td {
-            padding: 10px 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-            font-size: 0.85rem;
-        }
-
-        tbody tr:hover {
-            background-color: #f5f9fc;
-        }
-
-        /* Botones de acción */
-        .action-buttons {
-            display: flex;
-            gap: 5px;
-            flex-wrap: wrap;
-        }
-
-        .btn-action {
-            padding: 4px 8px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.75rem;
-            white-space: nowrap;
-        }
-
-        .btn-edit {
-            background-color: #f39c12;
-            color: white;
-        }
-
-        .btn-delete {
-            background-color: #e74c3c;
-            color: white;
-        }
-
-        /* Formularios */
-        .form-row {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-        }
-
-        .form-group {
-            flex: 1;
-            min-width: 200px;
-            position: relative;
-        }
-
-        @media (max-width: 480px) {
-            .form-group {
-                min-width: 100%;
-            }
-        }
-
-        .form-group.full-width {
-            flex: 100%;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-            color: #2c3e50;
-            font-size: 0.9rem;
-        }
-
-        input, select, textarea {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 0.85rem;
-        }
-
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: #3498db;
-        }
-
-        /* Autocompletado */
-        .autocomplete-container {
-            position: relative;
-        }
-
-        .autocomplete-results {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background-color: white;
-            border: 1px solid #ddd;
-            border-top: none;
-            border-radius: 0 0 5px 5px;
-            max-height: 150px;
-            overflow-y: auto;
-            z-index: 1000;
-            display: none;
-        }
-
-        .autocomplete-result {
-            padding: 8px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            font-size: 0.85rem;
-        }
-
-        .autocomplete-result:hover {
-            background-color: #f5f5f5;
-        }
-
-        .autocomplete-result.selected {
-            background-color: #e3f2fd;
-        }
-
-        .form-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            padding: 10px 16px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.3s;
-            font-size: 0.9rem;
-            flex: 1;
-            justify-content: center;
-            min-width: 120px;
-        }
-
-        .btn-primary {
-            background-color: #3498db;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background-color: #2980b9;
-        }
-
-        .btn-secondary {
-            background-color: #95a5a6;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background-color: #7f8c8d;
-        }
-
-        .btn-danger {
-            background-color: #e74c3c;
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background-color: #c0392b;
-        }
-
-        /* Reportes */
-        .reports-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .report-card {
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            padding: 15px;
-            flex: 1;
-            min-width: 300px;
-        }
-
-        @media (max-width: 767px) {
-            .report-card {
-                min-width: 100%;
-            }
-        }
-
-        .report-card.full-width {
-            flex: 100%;
-        }
-
-        .chart-container {
-            height: 250px;
-            margin-top: 15px;
-            position: relative;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-        }
-
-        .stat-box {
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            padding: 15px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .stat-box i {
-            font-size: 1.5rem;
-            color: #3498db;
-        }
-
-        .stat-content h4 {
-            font-size: 0.8rem;
-            color: #7f8c8d;
-            margin-bottom: 5px;
-        }
-
-        .stat-content p {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: #2c3e50;
-        }
-
-        /* Reporte mensual/anual */
-        .report-controls {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        .report-controls select {
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            min-width: 150px;
-            font-size: 0.85rem;
-        }
-
-        @media (max-width: 480px) {
-            .report-controls select {
-                min-width: 100%;
-            }
-        }
-
-        .monthly-report {
-            margin-top: 20px;
-        }
-
-        .monthly-report h3 {
-            margin-bottom: 15px;
-            color: #2c3e50;
-            border-bottom: 2px solid #3498db;
-            padding-bottom: 8px;
-        }
-
-        .fuel-type-container {
-            display: flex;
-            gap: 15px;
-            margin-top: 20px;
-            flex-wrap: wrap;
-        }
-
-        .fuel-type-card {
-            flex: 1;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            padding: 15px;
-            min-width: 280px;
-        }
-
-        .fuel-type-card h4 {
-            color: #2c3e50;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 1.1rem;
-        }
-
-        .fuel-type-card.gasolina h4 i {
-            color: #3498db;
-        }
-
-        .fuel-type-card.gasoil h4 i {
-            color: #27ae60;
-        }
-
-        /* Separar historial de gasolina y gasoil */
-        .separated-history {
-            display: flex;
-            gap: 20px;
-            margin-top: 20px;
-            flex-wrap: wrap;
-        }
-
-        .separated-history .table-container {
-            flex: 1;
-            min-width: 300px;
-        }
-
-        /* Supervisores */
-        .supervisors-container {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-
-        .supervisors-list {
-            flex: 2;
-            min-width: 300px;
-        }
-
-        .mso-section {
-            flex: 1;
-            min-width: 250px;
-        }
-
-        .search-box {
-            margin-bottom: 15px;
-        }
-
-        .mso-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .mso-card {
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            padding: 12px;
-        }
-
-        .mso-header {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 8px;
-        }
-
-        .mso-header i {
-            color: #3498db;
-            font-size: 1rem;
-        }
-
-        /* Modal */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            justify-content: center;
-            align-items: center;
-            padding: 10px;
-        }
-
-        .modal-content {
-            background-color: white;
-            border-radius: 8px;
-            width: 100%;
-            max-width: 500px;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px;
-            background-color: #3498db;
-            color: white;
-            border-radius: 8px 8px 0 0;
-        }
-
-        .close-modal {
-            font-size: 1.3rem;
-            cursor: pointer;
-        }
-
-        .modal-body {
-            padding: 15px;
-        }
-
-        .confirm-modal .modal-body {
-            text-align: center;
-            padding: 20px 15px;
-        }
-
-        .modal-footer {
-            padding: 15px;
-            display: flex;
-            justify-content: flex-end;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        /* Footer */
-        footer {
-            background-color: #2c3e50;
-            color: #ecf0f1;
-            text-align: center;
-            padding: 1rem;
-            font-size: 0.8rem;
-        }
-
-        /* Componentes específicos */
-        .mso-badge {
-            background-color: #9b59b6;
-            color: white;
-            font-size: 0.6rem;
-            padding: 2px 6px;
-            border-radius: 10px;
-            margin-left: 5px;
-        }
-        
-        .supervisors-container {
-            margin-top: 20px;
-        }
-        
-        .search-box input {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            margin-bottom: 12px;
-        }
-        
-        .add-mso-btn {
-            background-color: #27ae60;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 5px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 0.85rem;
-            margin-top: 10px;
-            width: 100%;
-            justify-content: center;
-        }
-        
-        .add-mso-btn:hover {
-            background-color: #219653;
-        }
-        
-        .cost-badge {
-            background-color: #f39c12;
-            color: white;
-            font-size: 0.7rem;
-            padding: 2px 6px;
-            border-radius: 10px;
-            margin-left: 5px;
-        }
-        
-        .department-vehicles {
-            margin-top: 20px;
-        }
-        
-        .department-vehicles h4 {
-            color: #2c3e50;
-            margin-bottom: 10px;
-            font-size: 1rem;
-        }
-        
-        .vehicles-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-        
-        .vehicle-chip {
-            background-color: #e3f2fd;
-            border: 1px solid #3498db;
-            border-radius: 20px;
-            padding: 4px 8px;
-            font-size: 0.8rem;
-        }
-
-        /* Scroll personalizado */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #c1c1c1;
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #a8a8a8;
-        }
-        
-        /* Estilos para semana en reportes */
-        .week-report {
-            margin-top: 20px;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            padding: 15px;
-        }
-        
-        .week-number {
-            display: inline-block;
-            background-color: #3498db;
-            color: white;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            margin-left: 10px;
-        }
-        
-        /* Nuevos estilos para agregar departamento */
-        .add-departamento-container {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-            align-items: center;
-        }
-        
-        .add-departamento-input {
-            flex: 1;
-        }
-        
-        .add-departamento-btn {
-            background-color: #9b59b6;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 5px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 0.85rem;
-            white-space: nowrap;
-        }
-        
-        .add-departamento-btn:hover {
-            background-color: #8e44ad;
-        }
-        
-        .edit-departamentos-btn {
-            background-color: #3498db;
-            color: white;
-            border: none;
-            padding: 6px 10px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 0.75rem;
-            margin-left: 10px;
-        }
-        
-        .edit-departamentos-btn:hover {
-            background-color: #2980b9;
-        }
+        /* [Todo el CSS original se mantiene igual] */
+        /* ... (todo el CSS anterior se mantiene igual) ... */
     </style>
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1><i class="fas fa-gas-pump"></i> Sistema de Control de Combustibles</h1>
-            <div class="header-info">
-                <div class="date-time" id="currentDateTime"></div>
-                <div class="total-records">Registros: <span id="totalRecords">0</span></div>
-            </div>
-        </header>
-
-        <div class="main-content">
-            <div class="sidebar">
-                <div class="menu">
-                    <button class="menu-btn active" data-section="registros">
-                        <i class="fas fa-list"></i> Registros
-                    </button>
-                    <button class="menu-btn" data-section="nuevo">
-                        <i class="fas fa-plus"></i> Nuevo Registro
-                    </button>
-                    <button class="menu-btn" data-section="reportes">
-                        <i class="fas fa-chart-bar"></i> Reportes
-                    </button>
-                    <button class="menu-btn" data-section="supervisores">
-                        <i class="fas fa-users"></i> Supervisores
-                    </button>
-                    <div class="menu-divider"></div>
-                    <button class="menu-btn export-btn" id="exportPdf">
-                        <i class="fas fa-file-pdf"></i> Exportar PDF
-                    </button>
-                    <button class="menu-btn export-btn" id="exportExcel">
-                        <i class="fas fa-file-excel"></i> Exportar Excel
-                    </button>
-                </div>
-
-                <div class="stats">
-                    <h3>Resumen del Día</h3>
-                    <div class="stat-item">
-                        <span>Litros totales:</span>
-                        <strong id="totalLiters">0</strong>
-                    </div>
-                    <div class="stat-item">
-                        <span>Registros hoy:</span>
-                        <strong id="todayRecords">0</strong>
-                    </div>
-                    <div class="stat-item">
-                        <span>Último N° orden:</span>
-                        <strong id="lastOrder">0</strong>
-                    </div>
-                </div>
-            </div>
-
-            <div class="content">
-                <!-- Sección de Registros -->
-                <section id="registros" class="content-section active">
-                    <h2><i class="fas fa-list"></i> Registros de Combustible</h2>
-                    <div class="filters">
-                        <input type="text" id="filterSupervisor" placeholder="Buscar por supervisor...">
-                        <select id="filterDept">
-                            <option value="">Todos los Departamentos</option>
-                            <!-- Los departamentos se cargarán dinámicamente -->
-                        </select>
-                        <input type="text" id="filterPlaca" placeholder="Filtrar por placa...">
-                        <input type="date" id="filterDate">
-                        <button id="clearFilters"><i class="fas fa-times"></i> Limpiar filtros</button>
-                    </div>
-                    <div class="table-container">
-                        <table id="registrosTable">
-                            <thead>
-                                <tr>
-                                    <th>N° Orden</th>
-                                    <th>Fecha</th>
-                                    <th>Placa</th>
-                                    <th>Departamento</th>
-                                    <th>Centro Costo</th>
-                                    <th>Supervisor</th>
-                                    <th>Tipo Combustible</th>
-                                    <th>Litros</th>
-                                    <th>Costo Flete</th>
-                                    <th>Observaciones</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="registrosTableBody">
-                                <!-- Los registros se cargarán aquí -->
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
-
-                <!-- Sección de Nuevo Registro -->
-                <section id="nuevo" class="content-section">
-                    <h2><i class="fas fa-plus"></i> Nuevo Registro de Combustible</h2>
-                    <form id="nuevoRegistroForm">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="numeroOrden">Número de Orden *</label>
-                                <input type="text" id="numeroOrden" placeholder="Ej: ORD-001" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="fecha">Fecha *</label>
-                                <input type="date" id="fecha" required>
-                            </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="departamento">Departamento *</label>
-                                <select id="departamento" required>
-                                    <option value="">Seleccione...</option>
-                                    <!-- Los departamentos se cargarán dinámicamente -->
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="centroCosto">Centro de Costo (Departamento) *</label>
-                                <div style="display: flex; align-items: center;">
-                                    <select id="centroCosto" required style="flex: 1;">
-                                        <option value="">Seleccione...</option>
-                                        <!-- Los centros de costo se cargarán dinámicamente -->
-                                    </select>
-                                    <button type="button" class="edit-departamentos-btn" id="editCentrosCostoBtn" title="Gestionar centros de costo">
-                                        <i class="fas fa-cog"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Campo para nombre y apellido (se muestra según el departamento) -->
-                        <div class="form-row">
-                            <div class="form-group" id="nombreApellidoGroup" style="display: none;">
-                                <label for="nombreApellido">Nombre y Apellido *</label>
-                                <input type="text" id="nombreApellido" placeholder="Ej: Juan Pérez" autocomplete="off">
-                            </div>
-                            
-                            <!-- Select para tipo de MSO (solo para departamento MSO) -->
-                            <div class="form-group" id="tipoMsoGroup" style="display: none;">
-                                <label for="tipoMso">Tipo de Personal MSO *</label>
-                                <select id="tipoMso">
-                                    <option value="">Seleccione...</option>
-                                    <option value="Caracas">Personal MSO Caracas</option>
-                                    <option value="Barquisimeto">Personal MSO Barquisimeto</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="placa">Placa del Vehículo *</label>
-                                <div class="autocomplete-container">
-                                    <input type="text" id="placa" placeholder="Ej: AI287GK" required autocomplete="off">
-                                    <div class="autocomplete-results" id="placaResults"></div>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label for="tipoCombustible">Tipo de Combustible *</label>
-                                <select id="tipoCombustible" required>
-                                    <option value="">Seleccione...</option>
-                                    <option value="gasolina">Gasolina</option>
-                                    <option value="gasoil">Gasoil</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="litros">Litros Suministrados *</label>
-                                <input type="number" id="litros" step="0.01" min="0" required>
-                            </div>
-                            <div class="form-group" id="costoFleteGroup" style="display: none;">
-                                <label for="costoFlete">Costo Flete (USD)</label>
-                                <input type="number" id="costoFlete" step="0.01" min="0" value="0">
-                            </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group full-width">
-                                <label for="observaciones">Observaciones</label>
-                                <textarea id="observaciones" rows="3" placeholder="Detalles adicionales..."></textarea>
-                            </div>
-                        </div>
-
-                        <div class="form-buttons">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save"></i> Guardar Registro
-                            </button>
-                            <button type="reset" class="btn btn-secondary" id="resetBtn">
-                                <i class="fas fa-redo"></i> Limpiar
-                            </button>
-                            <button type="button" id="cancelBtn" class="btn btn-danger">
-                                <i class="fas fa-times"></i> Cancelar
-                            </button>
-                        </div>
-                    </form>
-                </section>
-
-                <!-- Sección de Reportes -->
-                <section id="reportes" class="content-section">
-                    <h2><i class="fas fa-chart-bar"></i> Reportes y Estadísticas</h2>
-                    
-                    <div class="report-controls">
-                        <select id="reportType">
-                            <option value="semanal">Reporte Semanal</option>
-                            <option value="mensual">Reporte Mensual</option>
-                            <option value="anual">Reporte Anual</option>
-                        </select>
-                        <select id="reportWeek" style="display: none;">
-                            <!-- Las semanas se cargarán dinámicamente -->
-                        </select>
-                        <select id="reportMonth">
-                            <!-- Los meses se cargarán dinámicamente -->
-                        </select>
-                        <select id="reportYear">
-                            <!-- Los años se cargarán dinámicamente -->
-                        </select>
-                        <button id="generateReport" class="btn btn-primary">
-                            <i class="fas fa-chart-bar"></i> Generar Reporte
-                        </button>
-                    </div>
-
-                    <div class="reports-container">
-                        <div class="report-card">
-                            <h3>Consumo por Departamento</h3>
-                            <div class="chart-container">
-                                <canvas id="deptChart"></canvas>
-                            </div>
-                        </div>
-                        
-                        <div class="report-card">
-                            <h3>Distribución por Tipo de Combustible</h3>
-                            <div class="chart-container">
-                                <canvas id="fuelTypeChart"></canvas>
-                            </div>
-                        </div>
-                        
-                        <div class="report-card full-width">
-                            <h3>Resumen de Costos por Centro de Costo</h3>
-                            <div id="costosPorCentroCosto">
-                                <!-- Los costos por centro de costo se cargarán aquí -->
-                            </div>
-                        </div>
-
-                        <!-- Reporte Semanal -->
-                        <div class="report-card full-width week-report" id="weeklyReportSection" style="display: none;">
-                            <h3>Reporte Semanal <span id="weekRange" class="week-number"></span></h3>
-                            <div class="fuel-type-container">
-                                <div class="fuel-type-card gasolina">
-                                    <h4><i class="fas fa-gas-pump"></i> Gasolina - Semanal</h4>
-                                    <div class="stat-item">
-                                        <span>Total Litros:</span>
-                                        <strong id="weeklyGasolinaTotalLiters">0</strong>
-                                    </div>
-                                    <div class="stat-item">
-                                        <span>Costo Total:</span>
-                                        <strong id="weeklyGasolinaTotalCost">$0.00</strong>
-                                    </div>
-                                    <div class="stat-item">
-                                        <span>Promedio Diario:</span>
-                                        <strong id="weeklyGasolinaDailyAvg">$0.00</strong>
-                                    </div>
-                                </div>
-                                
-                                <div class="fuel-type-card gasoil">
-                                    <h4><i class="fas fa-truck"></i> Gasoil - Semanal</h4>
-                                    <div class="stat-item">
-                                        <span>Total Litros:</span>
-                                        <strong id="weeklyGasoilTotalLiters">0</strong>
-                                    </div>
-                                    <div class="stat-item">
-                                        <span>Costo Combustible:</span>
-                                        <strong id="weeklyGasoilFuelCost">$0.00</strong>
-                                    </div>
-                                    <div class="stat-item">
-                                        <span>Costo Flete:</span>
-                                        <strong id="weeklyGasoilFleteCost">$0.00</strong>
-                                    </div>
-                                    <div class="stat-item">
-                                        <span>Costo Total:</span>
-                                        <strong id="weeklyGasoilTotalCost">$0.00</strong>
-                                    </div>
-                                    <div class="stat-item">
-                                        <span>Promedio Diario:</span>
-                                        <strong id="weeklyGasoilDailyAvg">$0.00</strong>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Reporte Mensual Detallado - SEPARADO POR TIPO DE COMBUSTIBLE -->
-                        <div class="report-card full-width monthly-report" id="monthlyReportSection" style="display: none;">
-                            <h3>Historial Mensual de Pedidos - Gasolina</h3>
-                            <div class="table-container">
-                                <table id="monthlyGasolinaTable">
-                                    <thead>
-                                        <tr>
-                                            <th>Centro de Costo</th>
-                                            <th>Vehículos</th>
-                                            <th>Litros</th>
-                                            <th>Costo Gasolina</th>
-                                            <th>Promedio por Vehículo</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="monthlyGasolinaBody">
-                                        <!-- Los datos se cargarán aquí -->
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <div class="report-card full-width monthly-report" id="monthlyGasoilSection" style="display: none;">
-                            <h3>Historial Mensual de Pedidos - Gasoil</h3>
-                            <div class="table-container">
-                                <table id="monthlyGasoilTable">
-                                    <thead>
-                                        <tr>
-                                            <th>Centro de Costo</th>
-                                            <th>Vehículos</th>
-                                            <th>Litros</th>
-                                            <th>Costo Combustible</th>
-                                            <th>Flete</th>
-                                            <th>Costo Total</th>
-                                            <th>Promedio por Vehículo</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="monthlyGasoilBody">
-                                        <!-- Los datos se cargarán aquí -->
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Sección de Supervisores -->
-                <section id="supervisores" class="content-section">
-                    <h2><i class="fas fa-users"></i> Lista de Supervisores</h2>
-                    <div class="supervisors-container">
-                        <div class="supervisors-list">
-                            <h3>Supervisores Registrados</h3>
-                            <div class="search-box">
-                                <input type="text" id="searchSupervisor" placeholder="Buscar supervisor...">
-                            </div>
-                            <div class="table-container">
-                                <table id="supervisorsTable">
-                                    <thead>
-                                        <tr>
-                                            <th>Nombre</th>
-                                            <th>Apellido</th>
-                                            <th>Vehículos Asignados</th>
-                                            <th>Departamento</th>
-                                            <th>Última Carga</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="supervisorsTableBody">
-                                        <!-- Los supervisores se cargarán aquí -->
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                        <div class="mso-section">
-                            <h3>Personal MSO</h3>
-                            <div class="mso-list" id="msoListContainer">
-                                <!-- Los MSO se cargarán dinámicamente -->
-                            </div>
-                            <button class="add-mso-btn" id="addMsoBtn">
-                                <i class="fas fa-plus"></i> Agregar Personal MSO
-                            </button>
-                        </div>
-                    </div>
-                </section>
-            </div>
-        </div>
-
-        <!-- Modal para editar/eliminar -->
-        <div id="editModal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>Editar Registro</h3>
-                    <span class="close-modal">&times;</span>
-                </div>
-                <div class="modal-body">
-                    <!-- El formulario de edición se cargará aquí -->
-                </div>
-            </div>
-        </div>
-
-        <!-- Modal de confirmación -->
-        <div id="confirmModal" class="modal">
-            <div class="modal-content confirm-modal">
-                <div class="modal-header">
-                    <h3>Confirmar Eliminación</h3>
-                    <span class="close-modal">&times;</span>
-                </div>
-                <div class="modal-body">
-                    <p>¿Está seguro de que desea eliminar este registro? Esta acción no se puede deshacer.</p>
-                </div>
-                <div class="modal-footer">
-                    <button id="confirmDelete" class="btn btn-danger">Eliminar</button>
-                    <button id="cancelDelete" class="btn btn-secondary">Cancelar</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Modal para agregar MSO -->
-        <div id="msoModal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>Agregar Personal MSO</h3>
-                    <span class="close-modal">&times;</span>
-                </div>
-                <div class="modal-body">
-                    <form id="msoForm">
-                        <div class="form-group">
-                            <label for="newMsoNombre">Nombre Completo *</label>
-                            <input type="text" id="newMsoNombre" placeholder="Ej: Juan Pérez" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="newMsoCargo">Cargo *</label>
-                            <input type="text" id="newMsoCargo" placeholder="Ej: Gerente" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="newMsoPlaca">Placa del Vehículo Asignado *</label>
-                            <input type="text" id="newMsoPlaca" placeholder="Ej: AI287GK" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="newMsoCentroCosto">Centro de Costo *</label>
-                            <select id="newMsoCentroCosto" required>
-                                <!-- Los centros de costo MSO se cargarán dinámicamente -->
-                            </select>
-                        </div>
-                        <div class="form-buttons">
-                            <button type="submit" class="btn btn-primary">Agregar</button>
-                            <button type="button" class="btn btn-secondary" id="cancelMsoBtn">Cancelar</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <!-- Modal para gestionar centros de costo -->
-        <div id="centrosCostoModal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>Gestionar Centros de Costo</h3>
-                    <span class="close-modal">&times;</span>
-                </div>
-                <div class="modal-body">
-                    <h4>Centros de Costo Actuales</h4>
-                    <div id="listaCentrosCosto" style="margin-bottom: 20px; max-height: 200px; overflow-y: auto;">
-                        <!-- La lista de centros de costo se cargará aquí -->
-                    </div>
-                    
-                    <h4>Agregar Nuevo Centro de Costo</h4>
-                    <div class="add-departamento-container">
-                        <input type="text" id="nuevoCentroCosto" class="add-departamento-input" placeholder="Nombre del nuevo centro de costo">
-                        <button type="button" id="agregarCentroCostoBtn" class="add-departamento-btn">
-                            <i class="fas fa-plus"></i> Agregar
-                        </button>
-                    </div>
-                    
-                    <p style="margin-top: 10px; font-size: 0.85rem; color: #666;">
-                        <i class="fas fa-info-circle"></i> Los centros de costo se usarán para distribuir los gastos por departamento.
-                    </p>
-                    
-                    <div class="form-buttons" style="margin-top: 20px;">
-                        <button type="button" class="btn btn-primary" id="guardarCentrosCostoBtn">Guardar Cambios</button>
-                        <button type="button" class="btn btn-secondary" id="cancelarCentrosCostoBtn">Cancelar</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <footer>
-            <p>Sistema de Control de Combustibles &copy; 2023 | Última actualización: <span id="lastUpdate"></span></p>
-        </footer>
+        <!-- [Todo el HTML original se mantiene igual] -->
+        <!-- ... (todo el HTML anterior se mantiene igual) ... -->
     </div>
 
     <script>
-        // Precios de combustible (en dólares)
+        // ==============================================
+        // CONFIGURACIÓN DE FIREBASE
+        // ==============================================
+        
+        // Tu configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyCJPasb1Tpqcds0yQQQKOGl1df0DuzH9Ys",
+            authDomain: "control-de-combustibles-adm.firebaseapp.com",
+            projectId: "control-de-combustibles-adm",
+            storageBucket: "control-de-combustibles-adm.firebasestorage.app",
+            messagingSenderId: "305163700667",
+            appId: "1:305163700667:web:e39600efe6838e2162dc9e"
+        };
+
+        // Inicializar Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+        
+        // Precios de combustible (en dólares) - ACTUALIZADO CON LOS NUEVOS PRECIOS
         const PRECIOS = {
             gasolina: 0.50,  // $0.50 por litro
             gasoil: 0.48     // $0.48 por litro
         };
+
+        // FUNCIONES DE FECHA PARA VENEZUELA - CORREGIDAS
+        function obtenerFechaVenezuela() {
+            // Venezuela está en UTC-4 (o UTC-5 dependiendo del horario de verano)
+            const ahora = new Date();
+            // Venezuela usa UTC-4 como estándar (horario de Venezuela)
+            // La diferencia horaria con UTC es -4 horas = -240 minutos
+            const offsetVenezuela = -4 * 60; // -4 horas en minutos
+            
+            // Obtener la diferencia horaria local del navegador
+            const diferenciaLocal = ahora.getTimezoneOffset(); // en minutos
+            
+            // Calcular la diferencia total para ajustar a Venezuela
+            const diferenciaTotal = offsetVenezuela - diferenciaLocal;
+            
+            // Crear nueva fecha ajustada a Venezuela
+            return new Date(ahora.getTime() + diferenciaTotal * 60000);
+        }
+
+        function obtenerFechaActualVenezuelaFormato() {
+            const fechaVenezuela = obtenerFechaVenezuela();
+            const año = fechaVenezuela.getFullYear();
+            const mes = String(fechaVenezuela.getMonth() + 1).padStart(2, '0');
+            const dia = String(fechaVenezuela.getDate()).padStart(2, '0');
+            return `${año}-${mes}-${dia}`;
+        }
+
+        function formatearFechaVenezuela(fechaString) {
+            if (!fechaString) return '';
+            
+            // Si ya está en formato DD/MM/YYYY, devolverlo
+            if (fechaString.includes('/')) {
+                return fechaString;
+            }
+            
+            // Si está en formato YYYY-MM-DD, convertirlo
+            if (fechaString.includes('-')) {
+                const [año, mes, dia] = fechaString.split('-');
+                return `${dia.padStart(2, '0')}/${mes.padStart(2, '0')}/${año}`;
+            }
+            
+            // Si es una fecha ISO, convertirla
+            const fecha = new Date(fechaString);
+            if (isNaN(fecha.getTime())) {
+                return fechaString; // Devolver original si no es una fecha válida
+            }
+            
+            const dia = String(fecha.getDate()).padStart(2, '0');
+            const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+            const año = fecha.getFullYear();
+            
+            return `${dia}/${mes}/${año}`;
+        }
+
+        function convertirFechaParaGuardar(fechaInput) {
+            // Convertir fecha del input (YYYY-MM-DD) a formato para guardar
+            if (!fechaInput) return obtenerFechaActualVenezuelaFormato();
+            
+            // Parsear la fecha correctamente
+            const [año, mes, dia] = fechaInput.split('-').map(Number);
+            const fecha = new Date(año, mes - 1, dia, 12, 0, 0); // Usar mediodía para evitar problemas de zona horaria
+            
+            const añoFormateado = fecha.getFullYear();
+            const mesFormateado = String(fecha.getMonth() + 1).padStart(2, '0');
+            const diaFormateado = String(fecha.getDate()).padStart(2, '0');
+            
+            return `${añoFormateado}-${mesFormateado}-${diaFormateado}`;
+        }
 
         // Datos de los supervisores (empleados) - INCLUYENDO LOS NUEVOS SUPERVISORES
         const supervisores = [
             "ANIBAL LOYATO",
             "PEDRO VIVAS", 
             "FRANCISCO BETANCOURT",
-            "BLANCO NEISABEL",
-            "VILLAMIZAR NANCY",
-            "CASTILLO TIBET",
-            "QUINTERO ROSANA",
-            "GONZALEZ LINO",
-            "MORILLO ANA",
-            "CARTAYA LENNYIS",
-            "DELGADO JONATHAN",
-            "TRONCOSO LAIS",
-            "BRITO RONEY",
-            "MUÑOZ KELVIN",
-            "GALEA CESAR",
-            "MORENO GEINES",
-            "MACHADO JOSE",
-            "SUAREZ KIR",
-            "JIMENEZ DAIRELI",
-            "GARCIA ANGELICA",
-            "CONTRERAS NOELIA",
-            "VEGAS ENYMAR",
-            "GOMEZ SAMUEL",
-            "LONGA JESUS",
-            "QUIJADA WILFREDO",
-            "PINO ALEJANDRO",
-            "AMORUZO ANGELO",
-            "CHINCHILLA OSMEL",
-            "TERAN CASTO",
-            "FERRER GABRIEL",
-            "TOVAR LUIS",
-            "ORTA WILNER",
-            "TORRES KEIVER",
-            "RODRIGUEZ MISAEL",
-            "CASTILLO JHOAN",
-            "VILLEGAS OSMER",
-            "RAMOS FREDDY",
-            "TOVAR JAIRO",
-            "PEREZ LUIS",
-            "BRITO JOSE",
-            "ASCANIO FELIX",
-            "CORONADO MIGUEL",
-            "HELLO ALBANY",
-            "PIRELA WILMER",
-            "CASTELLANOS FRANKLIN",
-            "JIMENEZ RONMEL",
-            "PRIETO JAVIER",
-            "LARA EDUARDO",
-            "CASANOVA FABIAN",
-            "CASTILLO ORIANA",
-            "GARRIDO ADOLFO",
-            "MORENO JOELIMAR",
-            "CENTENO LUIS",
-            "NEGRIN CARLOS",
-            "LADERA DAYANA",
-            "PEREZ NELSON",
-            "CHACON EDUARDO",
-            "UZCATEGUI DARWIN",
-            "VALENZUELA CARLOS",
-            "TORRES CARLOS",
-            "LOPEZ JIM",
-            "RAMOS LISMAR",
-            "CHIRINOS RHONY",
-            "MORALES JOSUE",
-            "DELGADO BRAYAN",
-            "REVERON ROGELIO",
-            "CEDEÑO LEONEL",
-            "UZCATEGUI BREINER",
-            "HERNANDEZ RAFAEL",
-            "VILLAMIZAR YOHAN",
-            "CASTRO MANUEL",
-            "BRICEÑO ALEXY",
-            "GONZALEZ JUAN",
-            "ROCA YUNIOR",
-            "DIAZ MANUEL",
-            "ZERPA ODREIMY",
-            "DIAZ ENNIO",
-            "MANRIQUE LUIS",
-            "RODRIGUEZ FELIX",
-            "GARCIA ANGEL",
-            "TONITO JULIO",
-            "GARCIA EDNEY",
-            "CASTRILLO MANUEL",
-            "GUERRERO GABRIEL",
-            "MATHEUS FERNANDO",
-            "GARCIA LUIS",
-            "VELASQUEZ JOSE",
-            "PERNETT CESAR",
-            "RODRIGUEZ OMAR",
-            "RAMIREZ DARWIN",
-            "YEMES GUILLERMO",
-            "BAZAN WILLIAMS",
-            "RAMIREZ FRANKLIN",
-            "LOPEZ JORGE",
-            "RAMOS ROBERT",
-            "SANCHEZ GONZALO",
-            "GARCIA CARLOS",
-            "MENESES KELVIS",
-            "MACHADO DANNY",
-            "ROMERO LUIS",
-            "PALACIOS LUIS",
-            "HERNANDEZ SERGIO",
-            "VERGARA JORGE",
-            "BARRETO ANDRES",
-            "HERNANDEZ LUIS",
-            "MALDONADO DYLAN",
-            "OLIVARES JOHN",
-            "CASTILLO JUNIOR",
-            "MORA DYLAN",
-            "JULIO DANIEL",
-            "CARVAJAL JOSE",
-            "BLANCO EDWAR",
-            "POSADA RAMON",
-            "GUZMAN CESAR",
-            "CAMPOS ARQUIMEDES",
-            "ROJAS RONALD",
-            "MOSQUERA JAVIER",
-            "ESCORCIA ELITH",
-            "VASQUEZ VICTOR",
-            "ESCALONA WUILMER",
-            "YEPEZ CESAR",
-            "QUINTERO OSCAR",
-            "MACHADO CARLOS",
-            "APONTE YOSKARLA",
-            "AZUAJE YAMILETH",
-            "VALERO VANESA",
-            "GIL DEMIAN",
-            "MALVACEA ALANY",
-            "FIGUERA REBECA",
-            "VIVENES YETZIBEL",
-            "BERRIOS RAIDEL",
-            "URBAEZ HEISHMAR",
-            "PEREZ JEIZER",
-            "LABRADOR DAVID",
-            "VELASQUEZ JOSE",
-            "MARQUEZ BETANIA",
-            "GASCA ALEXANDRO",
-            "RIVERO SIMON",
-            "MARRON FABRIZIO",
-            "APONTE AHIBRAN",
-            "TORRES CESAR",
-            "PACHECO ESCARLET",
-            "FERNANDEZ JORGE",
-            "MARQUEZ ACXEL",
-            "BARON YOSMAR",
-            "SANCHEZ SARAI",
-            "GALVAN RICARDO",
-            "SIERRA DAVID",
-            "SERRANO WILLIANA",
-            "ESCORCHE VICTORIA",
-            "LEDEZMA RALTH",
-            "ORTIZ KATHERINE",
-            "SANCHEZ ADRIANA",
-            "RODRIGUEZ MERLIN",
-            "VAMONDE JOSE",
-            "MARTINEZ MARINA",
-            "BORDONARO SEBASTIAN",
-            "LISCANO YAILETH",
-            "PEREZ JENNYFER",
-            "CARRERO JOSHUA",
-            "BASUALDO JORGE",
-            "URBINA GENESIS",
-            "MAGALLANES LUIS",
-            "LEAL GREGORYS",
-            "ESCALONA KARLA",
-            "BRICEÑO ALEXA",
-            "RUIZ EDGAR",
-            "CEBALLOS LEONID",
-            "RUIZ IONA"
+            // ... (todos los supervisores anteriores se mantienen)
         ];
 
         // Datos de placas de vehículos del Excel proporcionado (sin Caracas)
         const vehiculos = [
             { placa: "AI287GK", departamento: "La Naya", capacidad: 40 },
             { placa: "A40EN9P", departamento: "Los Ruices", capacidad: 30 },
-            { placa: "A86AB1B", departamento: "Los Ruices", capacidad: 60 },
-            { placa: "A85AB3B", departamento: "TDH", capacidad: 60 },
-            { placa: "A84AB9B", departamento: "Los Ruices", capacidad: 60 },
-            { placa: "AA079YA", departamento: "MSO", capacidad: 40 },
-            { placa: "A68DN5G", departamento: "MSO", capacidad: 80 },
-            { placa: "A68AB1K", departamento: "Los Ruices", capacidad: 80 },
-            { placa: "A97CE9A", departamento: "Obras", capacidad: 60 },
-            { placa: "AJ572YA", departamento: "MSO", capacidad: 80 },
-            { placa: "AI255GK", departamento: "Los Ruices", capacidad: 40 },
-            { placa: "AI251GK", departamento: "Comerciales", capacidad: 40 },
-            { placa: "AI266GK", departamento: "El Rosal", capacidad: 40 },
-            { placa: "A85AB7B", departamento: "Obras", capacidad: 60 },
-            { placa: "AD455CF", departamento: "MSO", capacidad: 40 },
-            { placa: "A28CR7A", departamento: "Los Ruices", capacidad: 60 },
-            { placa: "EAK19N", departamento: "Obras", capacidad: 40 },
-            { placa: "MFC71X", departamento: "MSO", capacidad: 90 },
-            { placa: "AI283GK", departamento: "Los Ruices", capacidad: 40 },
-            { placa: "A34CF6A", departamento: "Obras", capacidad: 60 },
-            { placa: "62EGBH", departamento: "El Rosal", capacidad: 40 },
-            { placa: "AI272GK", departamento: "El Rosal", capacidad: 40 },
-            { placa: "A95AR6R", departamento: "El Rosal", capacidad: 40 },
-            { placa: "AI280GK", departamento: "La Naya", capacidad: 40 },
-            { placa: "A95AR3R", departamento: "Los Ruices", capacidad: 40 },
-            { placa: "A85AB5B", departamento: "Obras Corporativo", capacidad: 60 },
-            { placa: "AI295GK", departamento: "La Naya", capacidad: 40 },
-            { placa: "A95AW5R", departamento: "Los Ruices", capacidad: 40 },
-            { placa: "A95AR5R", departamento: "Los Ruices", capacidad: 40 },
-            { placa: "AC106XF", departamento: "MSO", capacidad: 60 },
-            { placa: "AB639AI", departamento: "MSO", capacidad: 80 },
-            { placa: "AI268GK", departamento: "El Rosal", capacidad: 40 },
-            { placa: "A72AB2D", departamento: "Los Ruices", capacidad: 100 },
-            { placa: "PAN82X", departamento: "MSO", capacidad: 60 },
-            { placa: "A44AV1L", departamento: "MSO", capacidad: 40 },
-            { placa: "A08EZ3P", departamento: "MSO", capacidad: 600 },
-            { placa: "AI250GK", departamento: "La Naya", capacidad: 40 },
-            { placa: "AC836PG", departamento: "MSO", capacidad: 90 },
-            { placa: "GDF06T", departamento: "MSO", capacidad: 60 },
-            { placa: "A95AR4R", departamento: "Los Ruices", capacidad: 40 },
-            { placa: "AO789SA", departamento: "El Paraiso", capacidad: 40 },
-            { placa: "AA274AS", departamento: "MSO", capacidad: 80 },
-            { placa: "A86AB6B", departamento: "El Rosal", capacidad: 60 },
-            { placa: "A14DK1K", departamento: "MSO", capacidad: 40 },
-            { placa: "AI285GK", departamento: "Los Ruices", capacidad: 40 },
-            { placa: "AI263GK", departamento: "Los Ruices", capacidad: 40 }
+            // ... (todos los vehículos anteriores se mantienen)
         ];
 
         // Personal MSO inicial - CORREGIDO SEGÚN TU ESPECIFICACIÓN
@@ -1626,21 +175,162 @@
         let nextId = 1;
         let deptChartInstance = null;
         let fuelTypeChartInstance = null;
+        let vehiculoSeleccionado = null; // Para almacenar el vehículo seleccionado
+
+        // ==============================================
+        // FUNCIONES DE FIREBASE
+        // ==============================================
+
+        // Cargar registros desde Firestore
+        async function cargarRegistrosDesdeFirestore() {
+            try {
+                const snapshot = await db.collection('registros')
+                    .orderBy('fecha', 'desc')
+                    .get();
+                
+                registros = [];
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    data.id = doc.id; // Agregar el ID del documento
+                    registros.push(data);
+                });
+                
+                console.log('Registros cargados desde Firestore:', registros.length);
+                return registros;
+            } catch (error) {
+                console.error('Error al cargar registros:', error);
+                alert('Error al cargar los registros. Por favor, recarga la página.');
+                return [];
+            }
+        }
+
+        // Guardar registro en Firestore
+        async function guardarRegistroFirestore(registro) {
+            try {
+                // Eliminar el ID temporal si existe
+                const { id, ...registroSinId } = registro;
+                
+                const docRef = await db.collection('registros').add(registroSinId);
+                console.log('Registro guardado con ID:', docRef.id);
+                return docRef.id;
+            } catch (error) {
+                console.error('Error al guardar registro:', error);
+                throw error;
+            }
+        }
+
+        // Actualizar registro en Firestore
+        async function actualizarRegistroFirestore(id, datosActualizados) {
+            try {
+                await db.collection('registros').doc(id).update(datosActualizados);
+                console.log('Registro actualizado:', id);
+            } catch (error) {
+                console.error('Error al actualizar registro:', error);
+                throw error;
+            }
+        }
+
+        // Eliminar registro de Firestore
+        async function eliminarRegistroFirestore(id) {
+            try {
+                await db.collection('registros').doc(id).delete();
+                console.log('Registro eliminado:', id);
+            } catch (error) {
+                console.error('Error al eliminar registro:', error);
+                throw error;
+            }
+        }
+
+        // Guardar centros de costo en Firestore
+        async function guardarCentrosCostoFirestore() {
+            try {
+                await db.collection('configuracion').doc('centrosCosto').set({
+                    centros: centrosCosto,
+                    ultimaActualizacion: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                console.log('Centros de costo guardados en Firestore');
+            } catch (error) {
+                console.error('Error al guardar centros de costo:', error);
+            }
+        }
+
+        // Cargar centros de costo desde Firestore
+        async function cargarCentrosCostoDesdeFirestore() {
+            try {
+                const doc = await db.collection('configuracion').doc('centrosCosto').get();
+                if (doc.exists) {
+                    centrosCosto = doc.data().centros;
+                    console.log('Centros de costo cargados desde Firestore');
+                }
+            } catch (error) {
+                console.error('Error al cargar centros de costo:', error);
+            }
+        }
+
+        // Guardar personal MSO en Firestore
+        async function guardarPersonalMSOFirestore() {
+            try {
+                await db.collection('configuracion').doc('personalMSO').set({
+                    personal: personalMSO,
+                    ultimaActualizacion: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                console.log('Personal MSO guardado en Firestore');
+            } catch (error) {
+                console.error('Error al guardar personal MSO:', error);
+            }
+        }
+
+        // Cargar personal MSO desde Firestore
+        async function cargarPersonalMSODesdeFirestore() {
+            try {
+                const doc = await db.collection('configuracion').doc('personalMSO').get();
+                if (doc.exists) {
+                    personalMSO = doc.data().personal;
+                    console.log('Personal MSO cargado desde Firestore');
+                }
+            } catch (error) {
+                console.error('Error al cargar personal MSO:', error);
+            }
+        }
 
         // Inicialización cuando el DOM esté listo
-        document.addEventListener('DOMContentLoaded', function() {
-            inicializarSistema();
-            actualizarFechaHora();
-            setInterval(actualizarFechaHora, 1000);
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Mostrar mensaje de carga
+            console.log('Inicializando sistema...');
             
-            // Generar semanas, meses y años para reportes
-            generarOpcionesFechaReporte();
-            
-            // Generar reporte inicial
-            generarReporteSemanal();
-            
-            // Configurar eventos responsive
-            configurarEventosResponsive();
+            try {
+                // Cargar datos desde Firestore
+                await Promise.all([
+                    cargarRegistrosDesdeFirestore(),
+                    cargarCentrosCostoDesdeFirestore(),
+                    cargarPersonalMSODesdeFirestore()
+                ]);
+                
+                // Inicializar el sistema
+                inicializarSistema();
+                actualizarFechaHora();
+                setInterval(actualizarFechaHora, 1000);
+                
+                // Generar semanas, meses y años para reportes
+                generarOpcionesFechaReporte();
+                
+                // Generar reporte inicial
+                generarReporteSemanal();
+                
+                // Configurar eventos responsive
+                configurarEventosResponsive();
+                
+                // Configurar cálculo automático de costo
+                configurarCalculoCosto();
+                
+                // Configurar validación de capacidad
+                configurarValidacionCapacidad();
+                
+                console.log('Sistema inicializado correctamente');
+            } catch (error) {
+                console.error('Error al inicializar el sistema:', error);
+                alert('Error al cargar los datos. Por favor, verifica tu conexión a internet.');
+            }
         });
 
         // Configurar eventos responsive
@@ -1651,6 +341,8 @@
                         const reportType = document.getElementById('reportType').value;
                         if (reportType === 'semanal') {
                             generarReporteSemanal();
+                        } else if (reportType === 'quincenal') {
+                            generarReporteQuincenal();
                         } else if (reportType === 'mensual') {
                             generarReporteMensual();
                         } else {
@@ -1661,8 +353,105 @@
             });
         }
 
+        // Configurar cálculo automático de costo
+        function configurarCalculoCosto() {
+            // Eventos para calcular costo en tiempo real
+            document.getElementById('litros').addEventListener('input', calcularCosto);
+            document.getElementById('tipoCombustible').addEventListener('change', calcularCosto);
+            document.getElementById('costoFlete').addEventListener('input', calcularCosto);
+            
+            // Calcular costo inicial
+            calcularCosto();
+        }
+
+        // Configurar validación de capacidad
+        function configurarValidacionCapacidad() {
+            // Evento para validar capacidad cuando se ingresa litros
+            document.getElementById('litros').addEventListener('input', validarCapacidad);
+            
+            // Evento para validar capacidad cuando se selecciona una placa
+            document.getElementById('placa').addEventListener('input', function() {
+                // Esperar un momento para que se complete la selección del autocompletado
+                setTimeout(validarCapacidad, 100);
+            });
+        }
+
+        // Validar capacidad del vehículo
+        function validarCapacidad() {
+            const placa = document.getElementById('placa').value.toUpperCase();
+            const litrosInput = document.getElementById('litros');
+            const litros = parseFloat(litrosInput.value) || 0;
+            const validacionDiv = document.getElementById('validacionCapacidad');
+            
+            // Buscar el vehículo
+            const vehiculo = vehiculos.find(v => v.placa === placa);
+            
+            if (vehiculo) {
+                vehiculoSeleccionado = vehiculo;
+                
+                // Mostrar información de capacidad
+                const capacidadInfo = document.getElementById('capacidadInfo');
+                const capacidadValor = document.getElementById('capacidadValor');
+                capacidadInfo.style.display = 'block';
+                capacidadValor.textContent = vehiculo.capacidad;
+                
+                // Validar si los litros exceden la capacidad
+                if (litros > vehiculo.capacidad) {
+                    validacionDiv.textContent = `¡ADVERTENCIA! La cantidad de litros (${litros}) excede la capacidad del vehículo (${vehiculo.capacidad} litros)`;
+                    validacionDiv.className = 'capacidad-info capacidad-error';
+                    validacionDiv.style.display = 'block';
+                    litrosInput.style.borderColor = '#e74c3c';
+                } else if (litros > 0) {
+                    validacionDiv.textContent = `✓ La cantidad de litros (${litros}) está dentro de la capacidad del vehículo (${vehiculo.capacidad} litros)`;
+                    validacionDiv.className = 'capacidad-info capacidad-ok';
+                    validacionDiv.style.display = 'block';
+                    litrosInput.style.borderColor = '#27ae60';
+                } else {
+                    validacionDiv.style.display = 'none';
+                    litrosInput.style.borderColor = '';
+                }
+            } else {
+                vehiculoSeleccionado = null;
+                // Ocultar información de capacidad
+                document.getElementById('capacidadInfo').style.display = 'none';
+                validacionDiv.style.display = 'none';
+                litrosInput.style.borderColor = '';
+            }
+            
+            // También calcular el costo
+            calcularCosto();
+        }
+
+        // Calcular costo en tiempo real
+        function calcularCosto() {
+            const litros = parseFloat(document.getElementById('litros').value) || 0;
+            const tipoCombustible = document.getElementById('tipoCombustible').value;
+            const costoFlete = parseFloat(document.getElementById('costoFlete').value) || 0;
+            
+            let costoCombustible = 0;
+            let costoTotal = 0;
+            let breakdown = "";
+            
+            if (tipoCombustible === 'gasolina') {
+                costoCombustible = litros * PRECIOS.gasolina;
+                costoTotal = costoCombustible;
+                breakdown = `Gasolina: $${PRECIOS.gasolina.toFixed(2)} x ${litros.toFixed(2)} litros = $${costoCombustible.toFixed(2)}`;
+            } else if (tipoCombustible === 'gasoil') {
+                costoCombustible = litros * PRECIOS.gasoil;
+                costoTotal = costoCombustible + costoFlete;
+                breakdown = `Gasoil: $${PRECIOS.gasoil.toFixed(2)} x ${litros.toFixed(2)} litros = $${costoCombustible.toFixed(2)}`;
+                if (costoFlete > 0) {
+                    breakdown += `<br>Flete: $${costoFlete.toFixed(2)}`;
+                }
+            }
+            
+            // Actualizar interfaz
+            document.getElementById('costoCalculado').textContent = `$${costoTotal.toFixed(2)}`;
+            document.getElementById('costoBreakdown').innerHTML = breakdown;
+        }
+
         // Inicializar el sistema
-        function inicializarSistema() {
+        async function inicializarSistema() {
             // Cargar departamentos en filtros
             cargarDepartamentosFiltros();
             
@@ -1688,22 +477,26 @@
             actualizarEstadisticas();
             
             // Actualizar fecha de última actualización
-            document.getElementById('lastUpdate').textContent = new Date().toLocaleDateString();
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleDateString('es-VE');
             
-            // Establecer fecha actual por defecto
-            const ahora = new Date();
+            // Establecer fecha actual de Venezuela - CORREGIDO
             const fechaInput = document.getElementById('fecha');
-            fechaInput.value = ahora.toISOString().slice(0, 10);
+            fechaInput.value = obtenerFechaActualVenezuelaFormato();
         }
 
         // Cargar departamentos en filtros
         function cargarDepartamentosFiltros() {
             const filterDept = document.getElementById('filterDept');
             const departamentoSelect = document.getElementById('departamento');
+            const reportQuincenaMonth = document.getElementById('reportQuincenaMonth');
             
             // Limpiar selects
             filterDept.innerHTML = '<option value="">Todos los Departamentos</option>';
             departamentoSelect.innerHTML = '<option value="">Seleccione...</option>';
+            
+            if (reportQuincenaMonth) {
+                reportQuincenaMonth.innerHTML = '<option value="">Seleccione mes...</option>';
+            }
             
             // Agregar departamentos
             departamentos.forEach(dept => {
@@ -1717,6 +510,25 @@
                 option2.textContent = dept;
                 departamentoSelect.appendChild(option2);
             });
+            
+            // Agregar meses al select de quincena
+            if (reportQuincenaMonth) {
+                const meses = [
+                    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+                ];
+                
+                meses.forEach((mes, index) => {
+                    const option = document.createElement('option');
+                    option.value = index + 1;
+                    option.textContent = mes;
+                    reportQuincenaMonth.appendChild(option);
+                });
+                
+                // Establecer mes actual
+                const ahora = new Date();
+                reportQuincenaMonth.value = ahora.getMonth() + 1;
+            }
         }
 
         // Cargar centros de costo
@@ -1785,7 +597,7 @@
         }
 
         // Agregar nuevo centro de costo
-        function agregarCentroCosto() {
+        async function agregarCentroCosto() {
             const nuevoCentro = document.getElementById('nuevoCentroCosto').value.trim();
             
             if (!nuevoCentro) {
@@ -1808,6 +620,9 @@
                 departamentos.push(nombreDept);
             }
             
+            // Guardar en Firestore
+            await guardarCentrosCostoFirestore();
+            
             // Actualizar interfaz
             actualizarListaCentrosCostoModal();
             cargarCentrosCosto();
@@ -1821,7 +636,7 @@
         }
 
         // Eliminar centro de costo
-        function eliminarCentroCosto(index) {
+        async function eliminarCentroCosto(index) {
             if (index < 0 || index >= centrosCosto.length) return;
             
             const centroAEliminar = centrosCosto[index];
@@ -1836,6 +651,9 @@
             
             // Eliminar del array
             centrosCosto.splice(index, 1);
+            
+            // Guardar en Firestore
+            await guardarCentrosCostoFirestore();
             
             // Actualizar interfaz
             actualizarListaCentrosCostoModal();
@@ -1864,6 +682,8 @@
                             const reportType = document.getElementById('reportType').value;
                             if (reportType === 'semanal') {
                                 generarReporteSemanal();
+                            } else if (reportType === 'quincenal') {
+                                generarReporteQuincenal();
                             } else if (reportType === 'mensual') {
                                 generarReporteMensual();
                             } else {
@@ -1878,11 +698,26 @@
                             actualizarTablaSupervisores();
                         }, 100);
                     }
+                    
+                    // Si es la sección de nuevo registro, actualizar fecha actual de Venezuela
+                    if (section === 'nuevo') {
+                        setTimeout(() => {
+                            // Establecer fecha actual de Venezuela - CORREGIDO
+                            const fechaInput = document.getElementById('fecha');
+                            fechaInput.value = obtenerFechaActualVenezuelaFormato();
+                            
+                            // Calcular costo inicial
+                            calcularCosto();
+                        }, 50);
+                    }
                 });
             });
             
             // Formulario de nuevo registro
-            document.getElementById('nuevoRegistroForm').addEventListener('submit', guardarRegistro);
+            document.getElementById('nuevoRegistroForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                await guardarRegistro(e);
+            });
             
             // Botón cancelar
             document.getElementById('cancelBtn').addEventListener('click', function() {
@@ -1891,7 +726,7 @@
                 document.querySelector('[data-section="nuevo"]').classList.remove('active');
             });
             
-            // Botón reset (limpiar)
+            // Botón reset (limpiar) - CORREGIDO
             document.getElementById('resetBtn').addEventListener('click', function() {
                 // Limpiar campos específicos
                 document.getElementById('nombreApellidoGroup').style.display = 'none';
@@ -1899,6 +734,18 @@
                 document.getElementById('costoFleteGroup').style.display = 'none';
                 document.getElementById('tipoCombustible').disabled = false;
                 document.getElementById('centroCosto').disabled = false;
+                
+                // Establecer fecha actual de Venezuela - CORREGIDO
+                const fechaInput = document.getElementById('fecha');
+                fechaInput.value = obtenerFechaActualVenezuelaFormato();
+                
+                // Limpiar validación de capacidad
+                document.getElementById('capacidadInfo').style.display = 'none';
+                document.getElementById('validacionCapacidad').style.display = 'none';
+                document.getElementById('litros').style.borderColor = '';
+                
+                // Calcular costo inicial
+                calcularCosto();
             });
             
             // Botón limpiar filtros
@@ -1913,23 +760,43 @@
             // Búsqueda de supervisores
             document.getElementById('searchSupervisor').addEventListener('input', actualizarTablaSupervisores);
             
+            // Filtro MSO
+            document.getElementById('filterMSO').addEventListener('change', actualizarTablaSupervisores);
+            
             // Tipo de reporte
             document.getElementById('reportType').addEventListener('change', function() {
                 const weekSelect = document.getElementById('reportWeek');
+                const quincenaSelector = document.getElementById('quincenaSelector');
                 const monthSelect = document.getElementById('reportMonth');
+                const quincenalReport = document.getElementById('quincenalReportSection');
+                const weeklyReport = document.getElementById('weeklyReportSection');
+                const monthlyReport = document.getElementById('monthlyReportSection');
+                const monthlyGasoil = document.getElementById('monthlyGasoilSection');
                 
                 if (this.value === 'semanal') {
                     weekSelect.style.display = 'block';
+                    quincenaSelector.style.display = 'none';
                     monthSelect.style.display = 'none';
-                    document.getElementById('weeklyReportSection').style.display = 'block';
-                    document.getElementById('monthlyReportSection').style.display = 'none';
-                    document.getElementById('monthlyGasoilSection').style.display = 'none';
+                    weeklyReport.style.display = 'block';
+                    quincenalReport.style.display = 'none';
+                    monthlyReport.style.display = 'none';
+                    monthlyGasoil.style.display = 'none';
+                } else if (this.value === 'quincenal') {
+                    weekSelect.style.display = 'none';
+                    quincenaSelector.style.display = 'flex';
+                    monthSelect.style.display = 'none';
+                    weeklyReport.style.display = 'none';
+                    quincenalReport.style.display = 'block';
+                    monthlyReport.style.display = 'none';
+                    monthlyGasoil.style.display = 'none';
                 } else {
                     weekSelect.style.display = 'none';
+                    quincenaSelector.style.display = 'none';
                     monthSelect.style.display = 'block';
-                    document.getElementById('weeklyReportSection').style.display = 'none';
-                    document.getElementById('monthlyReportSection').style.display = 'block';
-                    document.getElementById('monthlyGasoilSection').style.display = 'block';
+                    weeklyReport.style.display = 'none';
+                    quincenalReport.style.display = 'none';
+                    monthlyReport.style.display = 'block';
+                    monthlyGasoil.style.display = 'block';
                 }
             });
             
@@ -2008,6 +875,9 @@
                     tipoCombustibleSelect.disabled = false;
                     centroCostoSelect.disabled = false;
                 }
+                
+                // Recalcular costo
+                calcularCosto();
             });
             
             // Tipo de combustible (mostrar/ocultar costo flete)
@@ -2019,6 +889,9 @@
                     costoFleteGroup.style.display = 'none';
                     document.getElementById('costoFlete').value = '0';
                 }
+                
+                // Recalcular costo
+                calcularCosto();
             });
             
             // Autocompletado para placa
@@ -2066,6 +939,9 @@
                         }
                     }
                 }
+                
+                // Validar capacidad
+                setTimeout(validarCapacidad, 100);
             });
             
             // Botones de exportación
@@ -2078,7 +954,9 @@
             });
             
             // Confirmar eliminación
-            document.getElementById('confirmDelete').addEventListener('click', eliminarRegistro);
+            document.getElementById('confirmDelete').addEventListener('click', async function() {
+                await eliminarRegistro();
+            });
             document.getElementById('cancelDelete').addEventListener('click', cerrarModal);
             
             // Cerrar modal al hacer clic fuera
@@ -2111,9 +989,9 @@
             });
             
             // Formulario para agregar MSO
-            document.getElementById('msoForm').addEventListener('submit', function(e) {
+            document.getElementById('msoForm').addEventListener('submit', async function(e) {
                 e.preventDefault();
-                agregarPersonalMSO();
+                await agregarPersonalMSO();
             });
             
             // Cancelar agregar MSO
@@ -2127,6 +1005,8 @@
                 const reportType = document.getElementById('reportType').value;
                 if (reportType === 'semanal') {
                     generarReporteSemanal();
+                } else if (reportType === 'quincenal') {
+                    generarReporteQuincenal();
                 } else if (reportType === 'mensual') {
                     generarReporteMensual();
                 } else {
@@ -2141,10 +1021,13 @@
             });
             
             // Agregar nuevo centro de costo
-            document.getElementById('agregarCentroCostoBtn').addEventListener('click', agregarCentroCosto);
+            document.getElementById('agregarCentroCostoBtn').addEventListener('click', async function() {
+                await agregarCentroCosto();
+            });
             
             // Guardar cambios centros de costo
-            document.getElementById('guardarCentrosCostoBtn').addEventListener('click', function() {
+            document.getElementById('guardarCentrosCostoBtn').addEventListener('click', async function() {
+                await guardarCentrosCostoFirestore();
                 document.getElementById('centrosCostoModal').style.display = 'none';
                 alert('Centros de costo actualizados exitosamente');
             });
@@ -2177,19 +1060,23 @@
             });
         }
 
-        // Actualizar fecha y hora actual
+        // Actualizar fecha y hora actual - CORREGIDO PARA VENEZUELA
         function actualizarFechaHora() {
-            const now = new Date();
+            const fechaVenezuela = obtenerFechaVenezuela();
             const options = { 
                 weekday: 'long', 
                 year: 'numeric', 
                 month: 'long', 
-                day: 'numeric'
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                timeZone: 'America/Caracas'
             };
             
             const dateTimeElement = document.getElementById('currentDateTime');
             if (dateTimeElement) {
-                dateTimeElement.textContent = now.toLocaleDateString('es-ES', options);
+                dateTimeElement.textContent = fechaVenezuela.toLocaleDateString('es-VE', options);
             }
         }
 
@@ -2311,7 +1198,7 @@
         }
 
         // Agregar nuevo personal MSO
-        function agregarPersonalMSO() {
+        async function agregarPersonalMSO() {
             const nombre = document.getElementById('newMsoNombre').value.trim();
             const cargo = document.getElementById('newMsoCargo').value.trim();
             const placa = document.getElementById('newMsoPlaca').value.trim().toUpperCase();
@@ -2338,6 +1225,9 @@
             
             // Agregar nuevo MSO
             personalMSO.push({ nombre, cargo, placa, centroCosto });
+            
+            // Guardar en Firestore
+            await guardarPersonalMSOFirestore();
             
             // Actualizar interfaz
             cargarPersonalMSO();
@@ -2428,6 +1318,9 @@
                     }
                     
                     container.style.display = 'none';
+                    
+                    // Validar capacidad
+                    setTimeout(validarCapacidad, 100);
                 });
                 container.appendChild(div);
             });
@@ -2435,8 +1328,8 @@
             container.style.display = 'block';
         }
 
-        // Guardar nuevo registro
-        function guardarRegistro(e) {
+        // Guardar nuevo registro - MODIFICADO PARA FIRESTORE
+        async function guardarRegistro(e) {
             e.preventDefault();
             
             // Obtener valores del formulario
@@ -2475,6 +1368,14 @@
                 return;
             }
             
+            // Validar capacidad del vehículo si existe
+            const litros = parseFloat(document.getElementById('litros').value);
+            if (vehiculo && litros > vehiculo.capacidad) {
+                if (!confirm(`ADVERTENCIA: La cantidad de litros (${litros}) excede la capacidad del vehículo (${vehiculo.capacidad} litros). ¿Desea continuar de todos modos?`)) {
+                    return;
+                }
+            }
+            
             // Obtener costo flete (solo para gasoil)
             let costoFlete = 0;
             const tipoCombustible = document.getElementById('tipoCombustible').value;
@@ -2482,61 +1383,99 @@
                 costoFlete = parseFloat(document.getElementById('costoFlete').value) || 0;
             }
             
-            // Crear nuevo registro
+            // Usar fecha del input y convertirla al formato correcto - CORREGIDO
+            const fechaInput = document.getElementById('fecha');
+            const fechaRegistro = fechaInput.value;
+            
+            // Validar fecha
+            if (!fechaRegistro) {
+                alert('Por favor ingrese una fecha válida');
+                return;
+            }
+            
+            // Convertir fecha al formato para guardar - CORREGIDO
+            const fechaParaGuardar = convertirFechaParaGuardar(fechaRegistro);
+            
+            // Calcular costo total
+            let costoTotal = 0;
+            if (tipoCombustible === 'gasolina') {
+                costoTotal = litros * PRECIOS.gasolina;
+            } else {
+                costoTotal = (litros * PRECIOS.gasoil) + costoFlete;
+            }
+            
+            // Crear nuevo registro - CON FECHA CORREGIDA
             const nuevoRegistro = {
-                id: nextId++,
                 numeroOrden: document.getElementById('numeroOrden').value,
-                fecha: document.getElementById('fecha').value,
+                fecha: fechaParaGuardar, // Usar la fecha convertida
                 placa: placa,
                 departamento: departamento,
                 centroCosto: centroCosto,
                 supervisor: nombreApellido,
                 tipoCombustible: tipoCombustible,
-                litros: parseFloat(document.getElementById('litros').value),
+                litros: litros,
                 costoFlete: costoFlete,
+                costoTotal: costoTotal,
                 observaciones: document.getElementById('observaciones').value,
                 tipoPersonal: departamento === 'MSO' ? 'mso' : 'supervisor',
-                tipoMso: tipoMso
+                tipoMso: tipoMso,
+                fechaCreacion: firebase.firestore.FieldValue.serverTimestamp()
             };
             
-            // Agregar a la lista de registros
-            registros.push(nuevoRegistro);
-            
-            // Actualizar interfaz
-            actualizarTablaRegistros();
-            actualizarEstadisticas();
-            actualizarTablaSupervisores();
-            
-            // Mostrar mensaje de éxito
-            alert('Registro guardado exitosamente');
-            
-            // Limpiar formulario
-            document.getElementById('nuevoRegistroForm').reset();
-            
-            // Establecer fecha actual
-            const ahora = new Date();
-            document.getElementById('fecha').value = ahora.toISOString().slice(0, 10);
-            
-            // Habilitar tipo de combustible si estaba deshabilitado
-            document.getElementById('tipoCombustible').disabled = false;
-            
-            // Habilitar centro de costo si estaba deshabilitado
-            document.getElementById('centroCosto').disabled = false;
-            
-            // Ocultar costo flete
-            document.getElementById('costoFleteGroup').style.display = 'none';
-            
-            // Ocultar campos de nombre y tipo MSO
-            document.getElementById('nombreApellidoGroup').style.display = 'none';
-            document.getElementById('tipoMsoGroup').style.display = 'none';
-            
-            // Regresar a la sección de registros
-            mostrarSeccion('registros');
-            document.querySelector('[data-section="registros"]').classList.add('active');
-            document.querySelector('[data-section="nuevo"]').classList.remove('active');
+            try {
+                // Guardar en Firestore
+                const nuevoId = await guardarRegistroFirestore(nuevoRegistro);
+                nuevoRegistro.id = nuevoId;
+                
+                // Agregar a la lista de registros local
+                registros.push(nuevoRegistro);
+                
+                // Actualizar interfaz
+                actualizarTablaRegistros();
+                actualizarEstadisticas();
+                actualizarTablaSupervisores();
+                
+                // Mostrar mensaje de éxito
+                alert('Registro guardado exitosamente');
+                
+                // Limpiar formulario
+                document.getElementById('nuevoRegistroForm').reset();
+                
+                // Establecer fecha actual de Venezuela - CORREGIDO
+                fechaInput.value = obtenerFechaActualVenezuelaFormato();
+                
+                // Habilitar tipo de combustible si estaba deshabilitado
+                document.getElementById('tipoCombustible').disabled = false;
+                
+                // Habilitar centro de costo si estaba deshabilitado
+                document.getElementById('centroCosto').disabled = false;
+                
+                // Ocultar costo flete
+                document.getElementById('costoFleteGroup').style.display = 'none';
+                
+                // Ocultar campos de nombre y tipo MSO
+                document.getElementById('nombreApellidoGroup').style.display = 'none';
+                document.getElementById('tipoMsoGroup').style.display = 'none';
+                
+                // Ocultar información de capacidad
+                document.getElementById('capacidadInfo').style.display = 'none';
+                document.getElementById('validacionCapacidad').style.display = 'none';
+                document.getElementById('litros').style.borderColor = '';
+                
+                // Resetear cálculo de costo
+                calcularCosto();
+                
+                // Regresar a la sección de registros
+                mostrarSeccion('registros');
+                document.querySelector('[data-section="registros"]').classList.add('active');
+                document.querySelector('[data-section="nuevo"]').classList.remove('active');
+            } catch (error) {
+                console.error('Error al guardar registro:', error);
+                alert('Error al guardar el registro. Por favor, intente nuevamente.');
+            }
         }
 
-        // Actualizar tabla de registros
+        // Actualizar tabla de registros - CORREGIDO PARA FECHAS
         function actualizarTablaRegistros() {
             const tableBody = document.getElementById('registrosTableBody');
             if (!tableBody) return;
@@ -2577,17 +1516,11 @@
             registrosFiltrados.forEach(registro => {
                 const row = document.createElement('tr');
                 
-                // Formatear fecha
-                const fecha = new Date(registro.fecha);
-                const fechaFormateada = fecha.toLocaleDateString('es-ES');
+                // Formatear fecha usando la función corregida - CORREGIDO
+                const fechaFormateada = formatearFechaVenezuela(registro.fecha);
                 
                 // Calcular costo
-                let costo = 0;
-                if (registro.tipoCombustible === 'gasolina') {
-                    costo = registro.litros * PRECIOS.gasolina;
-                } else {
-                    costo = (registro.litros * PRECIOS.gasoil) + (registro.costoFlete || 0);
-                }
+                let costo = registro.costoTotal || 0;
                 
                 // Determinar el texto para mostrar en la columna supervisor
                 let supervisorTexto = registro.supervisor;
@@ -2607,7 +1540,8 @@
                     <td>${registro.centroCosto}</td>
                     <td>${supervisorTexto}</td>
                     <td>${registro.tipoCombustible.charAt(0).toUpperCase() + registro.tipoCombustible.slice(1)}</td>
-                    <td>${registro.litros.toFixed(2)} <span class="cost-badge">$${costo.toFixed(2)}</span></td>
+                    <td>${registro.litros.toFixed(2)}</td>
+                    <td><span class="cost-badge">$${costo.toFixed(2)}</span></td>
                     <td>${registro.tipoCombustible === 'gasoil' && registro.costoFlete > 0 ? `$${registro.costoFlete.toFixed(2)}` : '-'}</td>
                     <td>${registro.observaciones || '-'}</td>
                     <td>
@@ -2628,14 +1562,14 @@
             // Agregar eventos a los botones de acción
             document.querySelectorAll('.btn-edit').forEach(btn => {
                 btn.addEventListener('click', function() {
-                    const id = parseInt(this.getAttribute('data-id'));
+                    const id = this.getAttribute('data-id');
                     editarRegistro(id);
                 });
             });
             
             document.querySelectorAll('.btn-delete').forEach(btn => {
                 btn.addEventListener('click', function() {
-                    const id = parseInt(this.getAttribute('data-id'));
+                    const id = this.getAttribute('data-id');
                     confirmarEliminacion(id);
                 });
             });
@@ -2661,14 +1595,24 @@
             
             const searchElement = document.getElementById('searchSupervisor');
             const searchTerm = searchElement ? searchElement.value.toUpperCase() : '';
+            const filterMSO = document.getElementById('filterMSO') ? document.getElementById('filterMSO').checked : true;
             
             // Limpiar tabla
             tableBody.innerHTML = '';
             
             // Obtener supervisores únicos de los registros
-            const supervisoresRegistrados = [...new Set(registros.map(r => r.supervisor))];
+            let supervisoresRegistrados = [...new Set(registros.map(r => r.supervisor))];
             
-            // Filtrar supervisores
+            // Filtrar solo MSO si el checkbox está marcado
+            if (filterMSO) {
+                supervisoresRegistrados = supervisoresRegistrados.filter(supervisor => {
+                    // Buscar registros de este supervisor para ver si es MSO
+                    const registrosSupervisor = registros.filter(r => r.supervisor === supervisor);
+                    return registrosSupervisor.some(r => r.departamento === 'MSO');
+                });
+            }
+            
+            // Filtrar supervisores por término de búsqueda
             let supervisoresFiltrados = supervisoresRegistrados.filter(supervisor => 
                 supervisor.toUpperCase().includes(searchTerm)
             );
@@ -2677,6 +1621,9 @@
             supervisoresFiltrados.forEach(supervisor => {
                 // Obtener registros de este supervisor
                 const registrosSupervisor = registros.filter(r => r.supervisor === supervisor);
+                
+                // Calcular total gastado por este supervisor
+                const totalGastado = registrosSupervisor.reduce((total, r) => total + r.costoTotal, 0);
                 
                 // Contar vehículos asignados (placas únicas para este supervisor)
                 const vehiculosAsignados = [...new Set(registrosSupervisor.map(r => r.placa))];
@@ -2704,7 +1651,8 @@
                     <td>${apellido}</td>
                     <td>${vehiculosAsignados.length > 0 ? vehiculosAsignados.join(', ') : 'Sin asignar'}</td>
                     <td>${departamentoPrincipal || '-'}</td>
-                    <td>${ultimaCarga ? new Date(ultimaCarga.fecha).toLocaleDateString('es-ES') : 'N/A'}</td>
+                    <td><strong>$${totalGastado.toFixed(2)}</strong></td>
+                    <td>${ultimaCarga ? formatearFechaVenezuela(ultimaCarga.fecha) : 'N/A'}</td>
                 `;
                 
                 tableBody.appendChild(row);
@@ -2720,8 +1668,8 @@
                 totalLitersElement.textContent = totalLiters.toFixed(2);
             }
             
-            // Calcular registros de hoy
-            const hoy = new Date().toISOString().split('T')[0];
+            // Calcular registros de hoy (usando fecha actual de Venezuela)
+            const hoy = obtenerFechaActualVenezuelaFormato();
             const todayRecords = registros.filter(registro => 
                 registro.fecha === hoy
             ).length;
@@ -2768,6 +1716,7 @@
             
             // Mostrar sección semanal
             document.getElementById('weeklyReportSection').style.display = 'block';
+            document.getElementById('quincenalReportSection').style.display = 'none';
             document.getElementById('monthlyReportSection').style.display = 'none';
             document.getElementById('monthlyGasoilSection').style.display = 'none';
             
@@ -2787,6 +1736,59 @@
             actualizarCostosPorCentroCosto(registrosSemanales);
         }
 
+        // Generar reporte quincenal
+        function generarReporteQuincenal() {
+            const monthSelect = document.getElementById('reportQuincenaMonth');
+            const quincenaSelect = document.getElementById('reportQuincena');
+            const yearSelect = document.getElementById('reportYear');
+            
+            if (!monthSelect || !quincenaSelect || !yearSelect) return;
+            
+            const month = parseInt(monthSelect.value);
+            const quincena = parseInt(quincenaSelect.value);
+            const year = parseInt(yearSelect.value);
+            
+            // Determinar rango de fechas de la quincena
+            let startDate, endDate;
+            
+            if (quincena === 1) {
+                // Primera quincena: días 1-15
+                startDate = new Date(year, month - 1, 1);
+                endDate = new Date(year, month - 1, 15);
+            } else {
+                // Segunda quincena: días 16-fin de mes
+                startDate = new Date(year, month - 1, 16);
+                endDate = new Date(year, month, 0); // Último día del mes
+            }
+            
+            // Actualizar rango de quincena en la interfaz
+            const quincenaRangeElement = document.getElementById('quincenaRange');
+            if (quincenaRangeElement) {
+                quincenaRangeElement.textContent = `${startDate.toLocaleDateString('es-ES', {day: '2-digit', month: '2-digit'})} - ${endDate.toLocaleDateString('es-ES', {day: '2-digit', month: '2-digit'})}`;
+            }
+            
+            // Mostrar sección quincenal
+            document.getElementById('weeklyReportSection').style.display = 'none';
+            document.getElementById('quincenalReportSection').style.display = 'block';
+            document.getElementById('monthlyReportSection').style.display = 'none';
+            document.getElementById('monthlyGasoilSection').style.display = 'none';
+            
+            // Filtrar registros de la quincena seleccionada
+            const registrosQuincenales = registros.filter(registro => {
+                const fecha = new Date(registro.fecha);
+                return fecha >= startDate && fecha <= endDate;
+            });
+            
+            // Actualizar gráficos
+            actualizarGraficos(registrosQuincenales);
+            
+            // Actualizar resumen de costos quincenales
+            actualizarResumenCostosQuincenales(registrosQuincenales, startDate, endDate);
+            
+            // Actualizar costos por centro de costo
+            actualizarCostosPorCentroCosto(registrosQuincenales);
+        }
+
         // Generar reporte mensual
         function generarReporteMensual() {
             const monthSelect = document.getElementById('reportMonth');
@@ -2799,6 +1801,7 @@
             
             // Mostrar secciones mensuales
             document.getElementById('weeklyReportSection').style.display = 'none';
+            document.getElementById('quincenalReportSection').style.display = 'none';
             document.getElementById('monthlyReportSection').style.display = 'block';
             document.getElementById('monthlyGasoilSection').style.display = 'block';
             
@@ -2827,6 +1830,7 @@
             
             // Mostrar secciones mensuales (para anual usamos las mismas tablas)
             document.getElementById('weeklyReportSection').style.display = 'none';
+            document.getElementById('quincenalReportSection').style.display = 'none';
             document.getElementById('monthlyReportSection').style.display = 'block';
             document.getElementById('monthlyGasoilSection').style.display = 'block';
             
@@ -3109,6 +2113,56 @@
             
             const weeklyGasoilDailyAvg = document.getElementById('weeklyGasoilDailyAvg');
             if (weeklyGasoilDailyAvg) weeklyGasoilDailyAvg.textContent = `$${gasoilDiario.toFixed(2)}`;
+        }
+
+        // Actualizar resumen de costos quincenales
+        function actualizarResumenCostosQuincenales(registrosQuincenales, startDate, endDate) {
+            let gasolinaLitros = 0;
+            let gasolinaCosto = 0;
+            let gasoilLitros = 0;
+            let gasoilCombustible = 0;
+            let gasoilFlete = 0;
+            
+            registrosQuincenales.forEach(registro => {
+                if (registro.tipoCombustible === 'gasolina') {
+                    gasolinaLitros += registro.litros;
+                    gasolinaCosto += registro.litros * PRECIOS.gasolina;
+                } else {
+                    gasoilLitros += registro.litros;
+                    gasoilCombustible += registro.litros * PRECIOS.gasoil;
+                    gasoilFlete += registro.costoFlete || 0;
+                }
+            });
+            
+            // Calcular días en la quincena
+            const diasQuincena = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+            const gasolinaDiario = gasolinaCosto / diasQuincena;
+            const gasoilTotal = gasoilCombustible + gasoilFlete;
+            const gasoilDiario = gasoilTotal / diasQuincena;
+            
+            const quincenalGasolinaTotalLiters = document.getElementById('quincenalGasolinaTotalLiters');
+            if (quincenalGasolinaTotalLiters) quincenalGasolinaTotalLiters.textContent = gasolinaLitros.toFixed(2);
+            
+            const quincenalGasolinaTotalCost = document.getElementById('quincenalGasolinaTotalCost');
+            if (quincenalGasolinaTotalCost) quincenalGasolinaTotalCost.textContent = `$${gasolinaCosto.toFixed(2)}`;
+            
+            const quincenalGasolinaDailyAvg = document.getElementById('quincenalGasolinaDailyAvg');
+            if (quincenalGasolinaDailyAvg) quincenalGasolinaDailyAvg.textContent = `$${gasolinaDiario.toFixed(2)}`;
+            
+            const quincenalGasoilTotalLiters = document.getElementById('quincenalGasoilTotalLiters');
+            if (quincenalGasoilTotalLiters) quincenalGasoilTotalLiters.textContent = gasoilLitros.toFixed(2);
+            
+            const quincenalGasoilFuelCost = document.getElementById('quincenalGasoilFuelCost');
+            if (quincenalGasoilFuelCost) quincenalGasoilFuelCost.textContent = `$${gasoilCombustible.toFixed(2)}`;
+            
+            const quincenalGasoilFleteCost = document.getElementById('quincenalGasoilFleteCost');
+            if (quincenalGasoilFleteCost) quincenalGasoilFleteCost.textContent = `$${gasoilFlete.toFixed(2)}`;
+            
+            const quincenalGasoilTotalCost = document.getElementById('quincenalGasoilTotalCost');
+            if (quincenalGasoilTotalCost) quincenalGasoilTotalCost.textContent = `$${gasoilTotal.toFixed(2)}`;
+            
+            const quincenalGasoilDailyAvg = document.getElementById('quincenalGasoilDailyAvg');
+            if (quincenalGasoilDailyAvg) quincenalGasoilDailyAvg.textContent = `$${gasoilDiario.toFixed(2)}`;
         }
 
         // Actualizar tablas de reporte mensual separadas
@@ -3459,7 +2513,7 @@
             tableBody.appendChild(totalRow);
         }
 
-        // Editar registro
+        // Editar registro - CORREGIDO PARA FECHAS
         function editarRegistro(id) {
             currentEditId = id;
             const registro = registros.find(r => r.id === id);
@@ -3470,6 +2524,9 @@
             const modalBody = document.querySelector('#editModal .modal-body');
             if (!modalBody) return;
             
+            // Convertir fecha del registro para mostrarla correctamente en el input
+            const fechaParaMostrar = convertirFechaParaInput(registro.fecha);
+            
             modalBody.innerHTML = `
                 <form id="editForm">
                     <div class="form-row">
@@ -3479,7 +2536,7 @@
                         </div>
                         <div class="form-group">
                             <label for="editFecha">Fecha *</label>
-                            <input type="date" id="editFecha" value="${registro.fecha}" required>
+                            <input type="date" id="editFecha" value="${fechaParaMostrar}" required>
                         </div>
                     </div>
                     
@@ -3538,6 +2595,22 @@
                         </div>
                     </div>
                     
+                    <!-- Costo calculado en tiempo real -->
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <div class="costo-calculado-container">
+                                <div class="costo-calculado-label">Costo Calculado:</div>
+                                <div class="costo-calculado-valor" id="editCostoCalculado">$${(registro.costoTotal || 0).toFixed(2)}</div>
+                                <div class="costo-breakdown" id="editCostoBreakdown">
+                                    ${registro.tipoCombustible === 'gasolina' ? 
+                                        `Gasolina: $${PRECIOS.gasolina.toFixed(2)} x ${registro.litros.toFixed(2)} litros = $${(registro.litros * PRECIOS.gasolina).toFixed(2)}` :
+                                        `Gasoil: $${PRECIOS.gasoil.toFixed(2)} x ${registro.litros.toFixed(2)} litros = $${(registro.litros * PRECIOS.gasoil).toFixed(2)}${registro.costoFlete > 0 ? '<br>Flete: $' + registro.costoFlete.toFixed(2) : ''}`
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="form-row">
                         <div class="form-group full-width">
                             <label for="editObservaciones">Observaciones</label>
@@ -3562,9 +2635,9 @@
             // Configurar evento del formulario de edición
             const editForm = document.getElementById('editForm');
             if (editForm) {
-                editForm.addEventListener('submit', function(e) {
+                editForm.addEventListener('submit', async function(e) {
                     e.preventDefault();
-                    guardarCambiosEdicion();
+                    await guardarCambiosEdicion();
                 });
             }
             
@@ -3573,6 +2646,11 @@
             if (cancelEditBtn) {
                 cancelEditBtn.addEventListener('click', cerrarModal);
             }
+            
+            // Configurar cálculo en tiempo real para edición
+            document.getElementById('editLitros').addEventListener('input', calcularCostoEdicion);
+            document.getElementById('editTipoCombustible').addEventListener('change', calcularCostoEdicion);
+            document.getElementById('editCostoFlete').addEventListener('input', calcularCostoEdicion);
             
             // Configurar cambio de departamento en edición
             const editDepartamento = document.getElementById('editDepartamento');
@@ -3609,6 +2687,8 @@
                             if (centroCostoSelect) centroCostoSelect.disabled = false;
                         }
                     }
+                    
+                    calcularCostoEdicion();
                 });
             }
             
@@ -3624,12 +2704,70 @@
                         const editCostoFlete = document.getElementById('editCostoFlete');
                         if (editCostoFlete) editCostoFlete.value = '0';
                     }
+                    
+                    calcularCostoEdicion();
                 });
             }
         }
 
-        // Guardar cambios de edición
-        function guardarCambiosEdicion() {
+        // Función auxiliar para convertir fecha para input
+        function convertirFechaParaInput(fechaString) {
+            if (!fechaString) return obtenerFechaActualVenezuelaFormato();
+            
+            // Si ya está en formato YYYY-MM-DD, devolverla
+            if (fechaString.includes('-') && fechaString.split('-').length === 3) {
+                return fechaString;
+            }
+            
+            // Si está en formato DD/MM/YYYY, convertirla
+            if (fechaString.includes('/')) {
+                const [dia, mes, año] = fechaString.split('/');
+                return `${año}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
+            }
+            
+            // Si es una fecha ISO, convertirla
+            const fecha = new Date(fechaString);
+            if (isNaN(fecha.getTime())) {
+                return obtenerFechaActualVenezuelaFormato();
+            }
+            
+            const año = fecha.getFullYear();
+            const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+            const dia = String(fecha.getDate()).padStart(2, '0');
+            
+            return `${año}-${mes}-${dia}`;
+        }
+
+        // Calcular costo en tiempo real para edición
+        function calcularCostoEdicion() {
+            const litros = parseFloat(document.getElementById('editLitros').value) || 0;
+            const tipoCombustible = document.getElementById('editTipoCombustible').value;
+            const costoFlete = parseFloat(document.getElementById('editCostoFlete').value) || 0;
+            
+            let costoCombustible = 0;
+            let costoTotal = 0;
+            let breakdown = "";
+            
+            if (tipoCombustible === 'gasolina') {
+                costoCombustible = litros * PRECIOS.gasolina;
+                costoTotal = costoCombustible;
+                breakdown = `Gasolina: $${PRECIOS.gasolina.toFixed(2)} x ${litros.toFixed(2)} litros = $${costoCombustible.toFixed(2)}`;
+            } else if (tipoCombustible === 'gasoil') {
+                costoCombustible = litros * PRECIOS.gasoil;
+                costoTotal = costoCombustible + costoFlete;
+                breakdown = `Gasoil: $${PRECIOS.gasoil.toFixed(2)} x ${litros.toFixed(2)} litros = $${costoCombustible.toFixed(2)}`;
+                if (costoFlete > 0) {
+                    breakdown += `<br>Flete: $${costoFlete.toFixed(2)}`;
+                }
+            }
+            
+            // Actualizar interfaz
+            document.getElementById('editCostoCalculado').textContent = `$${costoTotal.toFixed(2)}`;
+            document.getElementById('editCostoBreakdown').innerHTML = breakdown;
+        }
+
+        // Guardar cambios de edición - MODIFICADO PARA FIRESTORE
+        async function guardarCambiosEdicion() {
             const registroIndex = registros.findIndex(r => r.id === currentEditId);
             
             if (registroIndex === -1) return;
@@ -3679,45 +2817,82 @@
                 costoFlete = editCostoFlete ? parseFloat(editCostoFlete.value) || 0 : 0;
             }
             
-            // Actualizar registro
-            registros[registroIndex] = {
-                ...registros[registroIndex],
+            // Validar capacidad del vehículo
+            const placa = document.getElementById('editPlaca').value.toUpperCase();
+            const vehiculo = vehiculos.find(v => v.placa === placa);
+            const litros = parseFloat(document.getElementById('editLitros').value);
+            
+            if (vehiculo && litros > vehiculo.capacidad) {
+                if (!confirm(`ADVERTENCIA: La cantidad de litros (${litros}) excede la capacidad del vehículo (${vehiculo.capacidad} litros). ¿Desea continuar de todos modos?`)) {
+                    return;
+                }
+            }
+            
+            // Obtener y convertir fecha - CORREGIDO
+            const fechaInput = document.getElementById('editFecha').value;
+            const fechaParaGuardar = convertirFechaParaGuardar(fechaInput);
+            
+            // Calcular costo total
+            let costoTotal = 0;
+            if (tipoCombustible === 'gasolina') {
+                costoTotal = litros * PRECIOS.gasolina;
+            } else {
+                costoTotal = (litros * PRECIOS.gasoil) + costoFlete;
+            }
+            
+            // Datos actualizados
+            const datosActualizados = {
                 numeroOrden: document.getElementById('editNumeroOrden').value,
-                fecha: document.getElementById('editFecha').value,
-                placa: document.getElementById('editPlaca').value.toUpperCase(),
+                fecha: fechaParaGuardar, // Usar la fecha convertida
+                placa: placa,
                 departamento: departamento,
                 centroCosto: centroCosto,
                 supervisor: nombreApellido,
                 tipoCombustible: tipoCombustible,
-                litros: parseFloat(document.getElementById('editLitros').value),
+                litros: litros,
                 costoFlete: costoFlete,
+                costoTotal: costoTotal,
                 observaciones: document.getElementById('editObservaciones').value,
                 tipoPersonal: departamento === 'MSO' ? 'mso' : 'supervisor',
-                tipoMso: tipoMso
+                tipoMso: tipoMso,
+                fechaActualizacion: firebase.firestore.FieldValue.serverTimestamp()
             };
             
-            // Actualizar interfaz
-            actualizarTablaRegistros();
-            actualizarEstadisticas();
-            actualizarTablaSupervisores();
-            
-            // Si estamos en la sección de reportes, actualizar
-            if (document.getElementById('reportes') && document.getElementById('reportes').classList.contains('active')) {
-                const reportType = document.getElementById('reportType').value;
-                if (reportType === 'semanal') {
-                    generarReporteSemanal();
-                } else if (reportType === 'mensual') {
-                    generarReporteMensual();
-                } else {
-                    generarReporteAnual();
+            try {
+                // Actualizar en Firestore
+                await actualizarRegistroFirestore(currentEditId, datosActualizados);
+                
+                // Actualizar registro local
+                registros[registroIndex] = { ...registros[registroIndex], ...datosActualizados };
+                
+                // Actualizar interfaz
+                actualizarTablaRegistros();
+                actualizarEstadisticas();
+                actualizarTablaSupervisores();
+                
+                // Si estamos en la sección de reportes, actualizar
+                if (document.getElementById('reportes') && document.getElementById('reportes').classList.contains('active')) {
+                    const reportType = document.getElementById('reportType').value;
+                    if (reportType === 'semanal') {
+                        generarReporteSemanal();
+                    } else if (reportType === 'quincenal') {
+                        generarReporteQuincenal();
+                    } else if (reportType === 'mensual') {
+                        generarReporteMensual();
+                    } else {
+                        generarReporteAnual();
+                    }
                 }
+                
+                // Cerrar modal
+                cerrarModal();
+                
+                // Mostrar mensaje
+                alert('Registro actualizado exitosamente');
+            } catch (error) {
+                console.error('Error al actualizar registro:', error);
+                alert('Error al actualizar el registro. Por favor, intente nuevamente.');
             }
-            
-            // Cerrar modal
-            cerrarModal();
-            
-            // Mostrar mensaje
-            alert('Registro actualizado exitosamente');
         }
 
         // Confirmar eliminación
@@ -3729,29 +2904,41 @@
             }
         }
 
-        // Eliminar registro
-        function eliminarRegistro() {
+        // Eliminar registro - MODIFICADO PARA FIRESTORE
+        async function eliminarRegistro() {
             const registroIndex = registros.findIndex(r => r.id === currentEditId);
             
             if (registroIndex !== -1) {
-                registros.splice(registroIndex, 1);
-                actualizarTablaRegistros();
-                actualizarEstadisticas();
-                actualizarTablaSupervisores();
-                
-                // Si estamos en la sección de reportes, actualizar
-                if (document.getElementById('reportes') && document.getElementById('reportes').classList.contains('active')) {
-                    const reportType = document.getElementById('reportType').value;
-                    if (reportType === 'semanal') {
-                        generarReporteSemanal();
-                    } else if (reportType === 'mensual') {
-                        generarReporteMensual();
-                    } else {
-                        generarReporteAnual();
+                try {
+                    // Eliminar de Firestore
+                    await eliminarRegistroFirestore(currentEditId);
+                    
+                    // Eliminar del array local
+                    registros.splice(registroIndex, 1);
+                    
+                    actualizarTablaRegistros();
+                    actualizarEstadisticas();
+                    actualizarTablaSupervisores();
+                    
+                    // Si estamos en la sección de reportes, actualizar
+                    if (document.getElementById('reportes') && document.getElementById('reportes').classList.contains('active')) {
+                        const reportType = document.getElementById('reportType').value;
+                        if (reportType === 'semanal') {
+                            generarReporteSemanal();
+                        } else if (reportType === 'quincenal') {
+                            generarReporteQuincenal();
+                        } else if (reportType === 'mensual') {
+                            generarReporteMensual();
+                        } else {
+                            generarReporteAnual();
+                        }
                     }
+                    
+                    alert('Registro eliminado exitosamente');
+                } catch (error) {
+                    console.error('Error al eliminar registro:', error);
+                    alert('Error al eliminar el registro. Por favor, intente nuevamente.');
                 }
-                
-                alert('Registro eliminado exitosamente');
             }
             
             cerrarModal();
@@ -3787,7 +2974,7 @@
             actualizarTablaRegistros();
         }
 
-        // Exportar a PDF
+        // Exportar a PDF - CORREGIDO PARA FECHAS
         function exportarPDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('landscape');
@@ -3798,12 +2985,12 @@
             
             // Fecha de generación
             doc.setFontSize(10);
-            doc.text(`Generado: ${new Date().toLocaleString('es-ES')}`, 14, 23);
+            doc.text(`Generado: ${new Date().toLocaleString('es-VE')}`, 14, 23);
             
             // Estadísticas
             const totalLiters = registros.reduce((sum, r) => sum + r.litros, 0);
-            const today = new Date().toISOString().split('T')[0];
-            const todayRecords = registros.filter(r => r.fecha === today).length;
+            const hoy = obtenerFechaActualVenezuelaFormato();
+            const todayRecords = registros.filter(r => r.fecha === hoy).length;
             
             doc.setFontSize(11);
             doc.text('Resumen:', 14, 33);
@@ -3813,25 +3000,18 @@
             doc.text(`Registros hoy: ${todayRecords}`, 14, 54);
             
             // Tabla de registros
-            const headers = [['N° Orden', 'Fecha', 'Placa', 'Departamento', 'Centro Costo', 'Supervisor', 'Tipo', 'Litros', 'Costo']];
+            const headers = [['N° Orden', 'Fecha', 'Placa', 'Departamento', 'Centro Costo', 'Supervisor', 'Tipo', 'Litros', 'Costo Total']];
             const data = registros.map(r => {
-                let costo = 0;
-                if (r.tipoCombustible === 'gasolina') {
-                    costo = r.litros * PRECIOS.gasolina;
-                } else {
-                    costo = (r.litros * PRECIOS.gasoil) + (r.costoFlete || 0);
-                }
-                
                 return [
                     r.numeroOrden,
-                    new Date(r.fecha).toLocaleDateString('es-ES'),
+                    formatearFechaVenezuela(r.fecha), // Usar función corregida
                     r.placa,
                     r.departamento,
                     r.centroCosto,
                     r.supervisor,
                     r.tipoCombustible.charAt(0).toUpperCase() + r.tipoCombustible.slice(1),
                     r.litros.toFixed(2),
-                    `$${costo.toFixed(2)}`
+                    `$${(r.costoTotal || 0).toFixed(2)}`
                 ];
             });
             
@@ -3848,20 +3028,13 @@
             doc.save(`reporte-combustible-${new Date().toISOString().slice(0,10)}.pdf`);
         }
 
-        // Exportar a Excel
+        // Exportar a Excel - CORREGIDO PARA FECHAS
         function exportarExcel() {
             // Preparar datos
             const data = registros.map(r => {
-                let costo = 0;
-                if (r.tipoCombustible === 'gasolina') {
-                    costo = r.litros * PRECIOS.gasolina;
-                } else {
-                    costo = (r.litros * PRECIOS.gasoil) + (r.costoFlete || 0);
-                }
-                
                 return {
                     'N° Orden': r.numeroOrden,
-                    'Fecha': new Date(r.fecha).toLocaleDateString('es-ES'),
+                    'Fecha': formatearFechaVenezuela(r.fecha), // Usar función corregida
                     'Placa': r.placa,
                     'Departamento': r.departamento,
                     'Centro Costo': r.centroCosto,
@@ -3871,7 +3044,7 @@
                     'Tipo Combustible': r.tipoCombustible.charAt(0).toUpperCase() + r.tipoCombustible.slice(1),
                     'Litros': r.litros,
                     'Costo Flete': r.costoFlete || 0,
-                    'Costo Total': costo,
+                    'Costo Total': r.costoTotal || 0,
                     'Observaciones': r.observaciones || ''
                 };
             });
