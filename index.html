@@ -238,6 +238,7 @@
         .btn-primary { background-color: var(--accent-blue); color: white; }
         .btn-success { background-color: var(--accent-green); color: white; }
         .btn-secondary { background-color: #95a5a6; color: white; }
+        .btn-warning { background-color: var(--accent-orange); color: white; }
         .btn-sm { padding: 4px 8px; font-size: 0.7rem; }
 
         .filters-bar {
@@ -287,6 +288,10 @@
         tr:hover {
             background-color: rgba(52, 152, 219, 0.1);
         }
+        
+        tr.pending-row {
+            background-color: rgba(243, 156, 18, 0.1);
+        }
 
         .action-btns {
             display: flex;
@@ -303,8 +308,9 @@
         }
 
         .edit-btn { background-color: var(--accent-orange); color: white; }
+        .complete-btn { background-color: var(--accent-green); color: white; }
         .delete-btn { background-color: var(--accent-red); color: white; }
-        .print-btn { background-color: var(--accent-green); color: white; }
+        .print-btn { background-color: var(--accent-blue); color: white; }
 
         .modal {
             display: none;
@@ -363,14 +369,34 @@
 
         .ticket-copy {
             width: 15cm;
-            height: 10cm;
+            height: auto;
+            min-height: 10cm;
             border: 2px solid #1a2980;
             padding: 10px 12px;
             background: white;
             border-radius: 8px;
             font-family: monospace;
             margin-bottom: 10px;
+            color: black;
         }
+        
+        .ticket-field-blank {
+            border-bottom: 1px dashed #000;
+            display: inline-block;
+            min-width: 80px;
+            text-align: center;
+            margin: 0 4px;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+        .status-pending { background-color: #f39c12; color: #fff; }
+        .status-completed { background-color: #27ae60; color: #fff; }
 
         .login-container {
             display: flex;
@@ -532,7 +558,8 @@
                 <main class="content-area">
                     <section id="ticket" class="section active">
                         <div class="card">
-                            <h2>Generar Ticket de Combustible</h2>
+                            <h2>Generar Ticket de Combustible (Pre-carga)</h2>
+                            <p style="color: var(--accent-orange); margin-bottom: 1rem;"><i class="fas fa-info-circle"></i> Complete los datos del vehículo y autorización. El campo LITROS se completará DESPUÉS de surtir el combustible.</p>
                             <form id="ticketForm">
                                 <div class="form-grid">
                                     <div class="form-group"><label>N° Ticket</label><input type="text" id="ticketNumero" readonly></div>
@@ -562,17 +589,17 @@
                                     </div>
                                     <div class="form-group"><label>Solicitante *</label><input type="text" id="ticketSolicitante" required></div>
                                     <div class="form-group"><label>Placa *</label><input type="text" id="ticketPlaca" required></div>
-                                    <div class="form-group"><label>Tipo Combustible *</label><select id="ticketTipo" required onchange="calcularCostoTicket()">
+                                    <div class="form-group"><label>Tipo Combustible *</label><select id="ticketTipo" required>
                                         <option value="gasolina">Gasolina ($0.50/L)</option>
                                         <option value="gasoil">Gasoil ($0.48/L)</option>
                                     </select></div>
-                                    <div class="form-group"><label>Litros *</label><input type="number" id="ticketLitros" step="0.01" min="0" required oninput="calcularCostoTicket()"></div>
-                                    <div class="form-group"><label>Costo Total</label><input type="text" id="costoTotalTicket" readonly style="background:#e8f5e9;"></div>
+                                    <div class="form-group"><label>Litros (se llenará después)</label><input type="number" id="ticketLitros" step="0.01" min="0" placeholder="Se completará al cargar" disabled style="background:#f0f0f0;"></div>
+                                    <div class="form-group"><label>Costo Total</label><input type="text" id="costoTotalTicket" value="$0.00" readonly style="background:#e8f5e9;"></div>
                                     <div class="form-group"><label>Autorizado por *</label><input type="text" id="ticketAutorizado" required></div>
                                     <div class="form-group full-width"><label>Observaciones</label><textarea id="ticketObs" rows="2"></textarea></div>
                                 </div>
                                 <div style="margin-top:1rem;">
-                                    <button type="submit" class="btn btn-success"><i class="fas fa-print"></i> Generar Ticket</button>
+                                    <button type="submit" class="btn btn-success"><i class="fas fa-print"></i> Generar Ticket (Pre-carga)</button>
                                     <button type="reset" class="btn btn-secondary">Limpiar</button>
                                 </div>
                             </form>
@@ -601,7 +628,7 @@
                                 <h3>Detalle por Centro</h3>
                                 <table id="detalleMetricas">
                                     <thead>
-                                        <tr>
+                                         <tr>
                                             <th>Centro de Operaciones</th>
                                             <th>Total Litros</th>
                                             <th>Total Costo ($)</th>
@@ -628,11 +655,11 @@
                                 <table id="historialTable">
                                     <thead>
                                         <tr>
-                                            <th>Fecha</th><th>Ticket</th><th>Placa</th><th>CO</th><th>Depto MSO</th><th>Solicitante</th><th>Tipo</th><th>Litros</th><th>Costo</th><th>Autorizado</th><th>Acciones</th>
+                                            <th>Fecha</th><th>Ticket</th><th>Placa</th><th>CO</th><th>Solicitante</th><th>Tipo</th><th>Litros</th><th>Costo</th><th>Estado</th><th>Acciones</th>
                                         </tr>
                                     </thead>
                                     <tbody id="historialBody">
-                                        <tr><td colspan="11" style="text-align:center; padding:40px;">Cargando datos...</td></tr>
+                                        <tr><td colspan="10" style="text-align:center; padding:40px;">Cargando datos...</td></tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -643,7 +670,7 @@
         </div>
     </div>
 
-    <div id="editTicketModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Editar Ticket</h3><span class="close-modal">&times;</span></div><div class="modal-body" id="editTicketBody"></div></div></div>
+    <div id="editTicketModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Completar / Editar Ticket</h3><span class="close-modal">&times;</span></div><div class="modal-body" id="editTicketBody"></div></div></div>
     <div id="ticketModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Ticket de Combustible</h3><span class="close-modal">&times;</span></div><div class="modal-body" id="ticketModalBody"></div><div class="modal-footer"><button id="printTicketBtn" class="btn btn-success">Imprimir</button><button class="close-modal btn btn-secondary">Cerrar</button></div></div></div>
 
     <script type="module">
@@ -708,12 +735,9 @@
             return `${year}${month}-${count.toString().padStart(4,'0')}`;
         }
         
-        function calcularCostoTicket() {
-            const litros = parseFloat(document.getElementById('ticketLitros').value) || 0;
-            const tipo = document.getElementById('ticketTipo').value;
-            const costo = litros * (tipo === 'gasolina' ? 0.50 : 0.48);
-            document.getElementById('costoTotalTicket').value = `$${costo.toFixed(2)}`;
-            return costo;
+        function calcularCosto(litros, tipo) {
+            if (!litros || litros <= 0) return 0;
+            return litros * (tipo === 'gasolina' ? 0.50 : 0.48);
         }
         
         window.selectUser = function(username) { 
@@ -843,7 +867,15 @@
                 await updateDoc(docRef, data);
                 return true;
             } catch (error) {
-                alert('Error al actualizar');
+                console.error("Error al actualizar:", error);
+                // Actualizar localmente si falla la conexión
+                const index = registros.findIndex(r => r.id === id);
+                if (index !== -1) {
+                    registros[index] = { ...registros[index], ...data };
+                    localStorage.setItem('combustible_tickets_backup', JSON.stringify(registros));
+                    updateUI();
+                }
+                alert('Error al actualizar en la nube, pero se guardó localmente.');
                 return false;
             }
         }
@@ -1020,6 +1052,157 @@
             document.getElementById('totalRecords').textContent = registros.length;
         }
         
+        // FUNCIÓN ACTUALIZADA: Genera el ticket con campo de litros en blanco para llenar MANUALMENTE en la gasolinera
+        function generateTwoCopiesTicketHTML(ticket) {
+            const safe = (v, d = '-') => v === undefined || v === null ? d : v;
+            // Determinar si el ticket está completado (tiene litros) o pendiente
+            const isCompleted = ticket.litros && ticket.litros > 0;
+            const litrosDisplay = isCompleted ? `${(ticket.litros || 0).toFixed(2)} L` : '__________ L (llenar en estación)';
+            const costoDisplay = isCompleted ? `$${(ticket.costoTotal || 0).toFixed(2)}` : '__________ $ (calcular al llenar)';
+            
+            const content = `
+                <div style="text-align:center; border-bottom:1px dashed #ccc; margin-bottom:8px;">
+                    <h2 style="margin:0;">INTER</h2>
+                    <small>Tu mundo, nuestro compromiso.</small>
+                </div>
+                <div style="display:flex; justify-content:space-between; background:#f0f0f0; padding:4px 8px; margin-bottom:8px;">
+                    <span><strong>CONTROL COMBUSTIBLE</strong></span>
+                    <span><strong>N° ${safe(ticket.numero)}</strong></span>
+                </div>
+                <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:4px 12px; margin-bottom:8px;">
+                    <div><small>📅 FECHA</small><br><strong>${formatDate(ticket.fecha)}</strong></div>
+                    <div><small>🏢 CENTRO</small><br><strong>${safe(ticket.centro)}</strong></div>
+                    ${ticket.departamentoMSO ? `<div><small>📁 DEPTO MSO</small><br><strong>${safe(ticket.departamentoMSO)}</strong></div>` : '<div></div>'}
+                    <div><small>🚗 PLACA</small><br><strong>${safe(ticket.placa)}</strong></div>
+                    <div><small>⛽ TIPO</small><br><strong>${ticket.tipo === 'gasolina' ? 'GASOLINA (0.50$/L)' : 'GASOIL (0.48$/L)'}</strong></div>
+                    <div><small>👤 SOLICITANTE</small><br><strong>${safe(ticket.solicitante)}</strong></div>
+                    <div><small>📊 LITROS</small><br><strong>${litrosDisplay}</strong></div>
+                    <div><small>💰 COSTO</small><br><strong>${costoDisplay}</strong></div>
+                    <div><small>✍️ AUTORIZADO</small><br><strong>${safe(ticket.autorizado)}</strong></div>
+                </div>
+                <div style="display:grid; grid-template-columns:repeat(3,1fr); text-align:center; margin-top:8px; padding-top:8px; border-top:1px dashed #ccc;">
+                    <div><div style="border-bottom:1px solid #000; height:20px;"></div><small>NOMBRE ISLERO</small></div>
+                    <div><div style="border-bottom:1px solid #000; height:20px;"></div><small>CÉDULA</small></div>
+                    <div><div style="border-bottom:1px solid #000; height:20px;"></div><small>FIRMA</small></div>
+                </div>
+                <div style="margin-top:6px; text-align:center; font-size:10px; color:#666;">📝 ${safe(ticket.obs, 'Sin observaciones')}</div>
+                ${!isCompleted ? '<div style="margin-top:8px; text-align:center; font-size:11px; color:#e67e22;"><i class="fas fa-pen"></i> IMPORTANTE: El islero debe llenar los litros y calcular el costo antes de firmar.</div>' : ''}
+            `;
+            return `<div style="display:flex; flex-direction:column; gap:8px;"><div class="ticket-copy">${content}</div><div style="text-align:center; color:#e74c3c;">—•—•—•—•—•—•—•—•—•—•—•—•—•—•—•</div><div class="ticket-copy">${content}</div></div>`;
+        }
+        
+        // Función para completar el ticket (solo Jefe Técnico o Admin)
+        window.completarTicket = async function(id) {
+            const r = registros.find(r => r.id === id);
+            if(!r) return;
+            // Verificar si ya está completado
+            const isCompleted = r.litros && r.litros > 0;
+            
+            document.getElementById('editTicketBody').innerHTML = `
+                <form id="editForm">
+                    <div style="margin-bottom: 1rem; padding: 8px; background: #f8f9fa; border-radius: 6px;">
+                        <strong>Ticket N°:</strong> ${r.numero}<br>
+                        <strong>Placa:</strong> ${r.placa}<br>
+                        <strong>Solicitante:</strong> ${r.solicitante}<br>
+                        <strong>Tipo Combustible:</strong> ${r.tipo === 'gasolina' ? 'Gasolina (0.50$/L)' : 'Gasoil (0.48$/L)'}<br>
+                    </div>
+                    <div class="form-group">
+                        <label>Litros suministrados *</label>
+                        <input type="number" id="editLitros" step="0.01" min="0" value="${r.litros || ''}" placeholder="Ingrese los litros surtidos" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Costo Total (Calculado automáticamente)</label>
+                        <input type="text" id="editCostoMostrar" readonly style="background:#e8f5e9;">
+                    </div>
+                    <div class="form-group">
+                        <label>Observaciones (opcional)</label>
+                        <textarea id="editObs">${r.obs || ''}</textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Guardar y Completar Ticket</button>
+                </form>
+                <script>
+                    const litrosInput = document.getElementById('editLitros');
+                    const costoMostrar = document.getElementById('editCostoMostrar');
+                    const tipoCombustible = '${r.tipo}';
+                    
+                    function actualizarCosto() {
+                        const litros = parseFloat(litrosInput.value) || 0;
+                        const precio = tipoCombustible === 'gasolina' ? 0.50 : 0.48;
+                        const costo = litros * precio;
+                        costoMostrar.value = ` + '`$${costo.toFixed(2)}`' + `;
+                    }
+                    litrosInput.addEventListener('input', actualizarCosto);
+                    actualizarCosto();
+                <\/script>
+            `;
+            
+            document.getElementById('editForm').onsubmit = async (e) => {
+                e.preventDefault();
+                const litros = parseFloat(document.getElementById('editLitros').value) || 0;
+                if(litros <= 0) {
+                    alert("Debe ingresar una cantidad de litros válida");
+                    return;
+                }
+                const tipo = r.tipo;
+                const costo = litros * (tipo === 'gasolina' ? 0.50 : 0.48);
+                await updateRegistro(id, {
+                    litros: litros,
+                    costoTotal: costo,
+                    obs: document.getElementById('editObs').value,
+                    completado: true,
+                    fechaCompletado: new Date().toISOString()
+                });
+                document.getElementById('editTicketModal').style.display = 'none';
+                alert('✅ Ticket completado exitosamente con ' + litros + ' litros. Costo total: $' + costo.toFixed(2));
+                updateUI();
+            };
+            document.getElementById('editTicketModal').style.display = 'flex';
+        };
+        
+        window.editRegistro = async function(id) {
+            const r = registros.find(r => r.id === id);
+            if(!r) return;
+            // Si el ticket ya tiene litros, permitir edición normal
+            const isCompleted = r.litros && r.litros > 0;
+            
+            document.getElementById('editTicketBody').innerHTML = `
+                <form id="editForm">
+                    <div class="form-group"><label>Solicitante</label><input id="editSolicitante" value="${r.solicitante || ''}"></div>
+                    <div class="form-group"><label>Placa</label><input id="editPlaca" value="${r.placa || ''}"></div>
+                    <div class="form-group"><label>Tipo</label><select id="editTipo"><option value="gasolina" ${r.tipo==='gasolina'?'selected':''}>Gasolina</option><option value="gasoil" ${r.tipo==='gasoil'?'selected':''}>Gasoil</option></select></div>
+                    <div class="form-group"><label>Litros</label><input type="number" id="editLitros" value="${r.litros || 0}" step="0.01"></div>
+                    <div class="form-group"><label>Autorizado</label><input id="editAutorizado" value="${r.autorizado || ''}"></div>
+                    <div class="form-group"><label>Observaciones</label><textarea id="editObs">${r.obs || ''}</textarea></div>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </form>`;
+            document.getElementById('editForm').onsubmit = async (e) => {
+                e.preventDefault();
+                const litros = parseFloat(document.getElementById('editLitros').value) || 0;
+                const tipo = document.getElementById('editTipo').value;
+                const costo = litros * (tipo === 'gasolina' ? 0.50 : 0.48);
+                await updateRegistro(id, {
+                    solicitante: document.getElementById('editSolicitante').value,
+                    placa: document.getElementById('editPlaca').value.toUpperCase(),
+                    tipo, litros, costoTotal: costo,
+                    autorizado: document.getElementById('editAutorizado').value,
+                    obs: document.getElementById('editObs').value,
+                    completado: litros > 0 ? true : false
+                });
+                document.getElementById('editTicketModal').style.display = 'none';
+                alert('Actualizado correctamente');
+            };
+            document.getElementById('editTicketModal').style.display = 'flex';
+        };
+        
+        window.deleteRegistro = deleteRegistro;
+        window.reimprimirTicket = function(id) {
+            const ticket = registros.find(r => r.id === id);
+            if(ticket) {
+                document.getElementById('ticketModalBody').innerHTML = generateTwoCopiesTicketHTML(ticket);
+                document.getElementById('ticketModal').style.display = 'flex';
+            }
+        };
+        
         function updateHistorialTable() {
             let filtered = [...registros];
             if(currentUser && currentUser.role === 'supervisor' && currentUser.centro) {
@@ -1037,24 +1220,29 @@
             const tbody = document.getElementById('historialBody');
             if (!tbody) return;
             if (filtered.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="11" style="text-align:center; padding:40px;">No hay registros disponibles</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:40px;">No hay registros disponibles</td></tr>';
                 return;
             }
             let html = '';
             for (let r of filtered) {
-                html += `<tr>
+                const isPending = !r.litros || r.litros === 0;
+                const rowClass = isPending ? 'pending-row' : '';
+                const statusBadge = isPending ? '<span class="status-badge status-pending">Pendiente</span>' : '<span class="status-badge status-completed">Completado</span>';
+                const litrosDisplay = (!r.litros || r.litros === 0) ? '<span style="color: #e67e22;">Pendiente</span>' : (r.litros || 0).toFixed(2);
+                const costoDisplay = (!r.costoTotal || r.costoTotal === 0) ? '<span style="color: #e67e22;">Pendiente</span>' : `$${(r.costoTotal || 0).toFixed(2)}`;
+                
+                html += `<tr class="${rowClass}">
                     <td>${formatDate(r.fecha)}</td>
                     <td><strong>${r.numero || '-'}</strong></td>
                     <td>${r.placa || '-'}</td>
                     <td>${r.centro || '-'}</td>
-                    <td>${r.departamentoMSO || '-'}</td>
                     <td>${r.solicitante || '-'}</td>
                     <td>${r.tipo === 'gasolina' ? '⛽ Gasolina' : '🛢️ Gasoil'}</td>
-                    <td>${(r.litros || 0).toFixed(2)}</td>
-                    <td>$${(r.costoTotal || 0).toFixed(2)}</td>
-                    <td>${r.autorizado || '-'}</td>
+                    <td>${litrosDisplay}</td>
+                    <td>${costoDisplay}</td>
+                    <td>${statusBadge}</td>
                     <td class="action-btns">
-                        <button class="action-btn edit-btn" onclick="window.editRegistro('${r.id}')">Editar</button>
+                        ${isPending ? `<button class="action-btn complete-btn" onclick="window.completarTicket('${r.id}')"><i class="fas fa-gas-pump"></i> Completar</button>` : `<button class="action-btn edit-btn" onclick="window.editRegistro('${r.id}')">Editar</button>`}
                         ${currentUser.role === 'admin' ? `<button class="action-btn delete-btn" onclick="window.deleteRegistro('${r.id}')">Eliminar</button>` : ''}
                         <button class="action-btn print-btn" onclick="window.reimprimirTicket('${r.id}')">Reimprimir</button>
                     </td>
@@ -1062,78 +1250,6 @@
             }
             tbody.innerHTML = html;
         }
-        
-        function generateTwoCopiesTicketHTML(ticket) {
-            const safe = (v, d = '-') => v === undefined || v === null ? d : v;
-            const content = `
-                <div style="text-align:center; border-bottom:1px dashed #ccc; margin-bottom:8px;">
-                    <h2 style="margin:0;">INTER</h2>
-                    <small>Tu mundo, nuestro compromiso.</small>
-                </div>
-                <div style="display:flex; justify-content:space-between; background:#f0f0f0; padding:4px 8px; margin-bottom:8px;">
-                    <span><strong>CONTROL COMBUSTIBLE</strong></span>
-                    <span><strong>N° ${safe(ticket.numero)}</strong></span>
-                </div>
-                <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:4px 12px; margin-bottom:8px;">
-                    <div><small>📅 FECHA</small><br><strong>${formatDate(ticket.fecha)}</strong></div>
-                    <div><small>🏢 CENTRO</small><br><strong>${safe(ticket.centro)}</strong></div>
-                    ${ticket.departamentoMSO ? `<div><small>📁 DEPTO MSO</small><br><strong>${safe(ticket.departamentoMSO)}</strong></div>` : '<div></div>'}
-                    <div><small>🚗 PLACA</small><br><strong>${safe(ticket.placa)}</strong></div>
-                    <div><small>⛽ TIPO</small><br><strong>${ticket.tipo === 'gasolina' ? 'GASOLINA' : 'GASOIL'}</strong></div>
-                    <div><small>👤 SOLICITANTE</small><br><strong>${safe(ticket.solicitante)}</strong></div>
-                    <div><small>📊 LITROS</small><br><strong>${(ticket.litros || 0).toFixed(2)} L</strong></div>
-                    <div><small>💰 COSTO</small><br><strong>$${(ticket.costoTotal || 0).toFixed(2)}</strong></div>
-                    <div><small>✍️ AUTORIZADO</small><br><strong>${safe(ticket.autorizado)}</strong></div>
-                </div>
-                <div style="display:grid; grid-template-columns:repeat(3,1fr); text-align:center; margin-top:8px; padding-top:8px; border-top:1px dashed #ccc;">
-                    <div><div style="border-bottom:1px solid #000; height:20px;"></div><small>NOMBRE ISLERO</small></div>
-                    <div><div style="border-bottom:1px solid #000; height:20px;"></div><small>CÉDULA</small></div>
-                    <div><div style="border-bottom:1px solid #000; height:20px;"></div><small>FIRMA</small></div>
-                </div>
-                <div style="margin-top:6px; text-align:center; font-size:10px; color:#666;">📝 ${safe(ticket.obs, 'Sin observaciones')}</div>
-            `;
-            return `<div style="display:flex; flex-direction:column; gap:8px;"><div class="ticket-copy">${content}</div><div style="text-align:center; color:#e74c3c;">—•—•—•—•—•—•—•—•—•—•—•—•—•—•—•</div><div class="ticket-copy">${content}</div></div>`;
-        }
-        
-        window.editRegistro = async function(id) {
-            const r = registros.find(r => r.id === id);
-            if(!r) return;
-            document.getElementById('editTicketBody').innerHTML = `
-                <form id="editForm">
-                    <div class="form-group"><label>Solicitante</label><input id="editSolicitante" value="${r.solicitante || ''}"></div>
-                    <div class="form-group"><label>Placa</label><input id="editPlaca" value="${r.placa || ''}"></div>
-                    <div class="form-group"><label>Tipo</label><select id="editTipo"><option value="gasolina" ${r.tipo==='gasolina'?'selected':''}>Gasolina</option><option value="gasoil" ${r.tipo==='gasoil'?'selected':''}>Gasoil</option></select></div>
-                    <div class="form-group"><label>Litros</label><input type="number" id="editLitros" value="${r.litros || 0}" step="0.01"></div>
-                    <div class="form-group"><label>Autorizado</label><input id="editAutorizado" value="${r.autorizado || ''}"></div>
-                    <div class="form-group"><label>Observaciones</label><textarea id="editObs">${r.obs || ''}</textarea></div>
-                    <button type="submit" class="btn btn-primary">Guardar</button>
-                </form>`;
-            document.getElementById('editForm').onsubmit = async (e) => {
-                e.preventDefault();
-                const litros = parseFloat(document.getElementById('editLitros').value) || 0;
-                const tipo = document.getElementById('editTipo').value;
-                const costo = litros * (tipo === 'gasolina' ? 0.50 : 0.48);
-                await updateRegistro(id, {
-                    solicitante: document.getElementById('editSolicitante').value,
-                    placa: document.getElementById('editPlaca').value.toUpperCase(),
-                    tipo, litros, costoTotal: costo,
-                    autorizado: document.getElementById('editAutorizado').value,
-                    obs: document.getElementById('editObs').value
-                });
-                document.getElementById('editTicketModal').style.display = 'none';
-                alert('Actualizado correctamente');
-            };
-            document.getElementById('editTicketModal').style.display = 'flex';
-        };
-        
-        window.deleteRegistro = deleteRegistro;
-        window.reimprimirTicket = function(id) {
-            const ticket = registros.find(r => r.id === id);
-            if(ticket) {
-                document.getElementById('ticketModalBody').innerHTML = generateTwoCopiesTicketHTML(ticket);
-                document.getElementById('ticketModal').style.display = 'flex';
-            }
-        };
         
         function init() {
             const today = getToday();
@@ -1148,32 +1264,39 @@
             
             document.getElementById('ticketForm').onsubmit = async (e) => {
                 e.preventDefault();
-                const litros = parseFloat(document.getElementById('ticketLitros').value);
-                const tipo = document.getElementById('ticketTipo').value;
                 const centro = document.getElementById('ticketCO').value;
                 if(!centro) { alert("Seleccione centro de operaciones"); return; }
-                if(!litros || litros <= 0) { alert("Ingrese una cantidad de litros válida"); return; }
                 let deptoMSO = '';
                 if(centro === 'MSO Caracas') {
                     deptoMSO = document.getElementById('departamentoMSO').value;
                     if(!deptoMSO) { alert('Seleccione departamento MSO'); return; }
                 }
+                // Guardar el ticket SIN litros (se guarda como 0)
                 const newRegistro = {
-                    numero: generateTicketNumber(), fecha: getToday(), centro, departamentoMSO: deptoMSO,
+                    numero: generateTicketNumber(), 
+                    fecha: getToday(), 
+                    centro, 
+                    departamentoMSO: deptoMSO,
                     solicitante: document.getElementById('ticketSolicitante').value,
-                    placa: document.getElementById('ticketPlaca').value.toUpperCase(), tipo, litros,
-                    costoTotal: litros * (tipo==='gasolina'?0.50:0.48),
-                    autorizado: document.getElementById('ticketAutorizado').value, obs: document.getElementById('ticketObs').value,
+                    placa: document.getElementById('ticketPlaca').value.toUpperCase(), 
+                    tipo: document.getElementById('ticketTipo').value, 
+                    litros: 0,  // INICIALMENTE EN 0
+                    costoTotal: 0, // COSTO INICIAL 0
+                    autorizado: document.getElementById('ticketAutorizado').value, 
+                    obs: document.getElementById('ticketObs').value,
+                    completado: false,
                     createdAt: new Date().toISOString()
                 };
                 const success = await addRegistro(newRegistro);
                 if(success) {
+                    // Mostrar el ticket con campo de litros en blanco
                     document.getElementById('ticketModalBody').innerHTML = generateTwoCopiesTicketHTML(newRegistro);
                     document.getElementById('ticketModal').style.display = 'flex';
                     document.getElementById('ticketForm').reset();
                     document.getElementById('ticketNumero').value = generateTicketNumber();
                     document.getElementById('ticketFecha').value = getToday();
                     if(currentUser.role !== 'admin' && currentUser.centro) document.getElementById('ticketCO').value = currentUser.centro;
+                    alert('✅ Ticket generado exitosamente. El islero debe llenar los litros en la estación de servicio.');
                 }
             };
             
@@ -1230,7 +1353,6 @@
         
         window.login = login;
         window.logout = logout;
-        window.calcularCostoTicket = calcularCostoTicket;
         
         document.getElementById('loginPass')?.addEventListener('keypress', (e) => { if(e.key === 'Enter') login(); });
         
