@@ -367,17 +367,141 @@
             margin-bottom: 20px;
         }
 
-        .ticket-copy {
-            width: 15cm;
-            height: auto;
-            min-height: 10cm;
-            border: 2px solid #1a2980;
-            padding: 10px 12px;
+        /* ESTILOS MEJORADOS PARA EL TICKET */
+        .ticket-container {
             background: white;
-            border-radius: 8px;
-            font-family: monospace;
-            margin-bottom: 10px;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .ticket-copy {
+            width: 100%;
+            max-width: 80mm;
+            min-width: 70mm;
+            height: auto;
+            border: 2px solid #1a2980;
+            padding: 8px 10px;
+            background: white;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace, 'Segoe UI';
+            font-size: 10px;
             color: black;
+            margin: 0 auto;
+            box-sizing: border-box;
+            page-break-after: avoid;
+            page-break-inside: avoid;
+            break-inside: avoid;
+            position: relative;
+        }
+        
+        .ticket-copy h2 {
+            font-size: 14px;
+            margin: 0 0 2px 0;
+            text-align: center;
+        }
+        
+        .ticket-copy .subtitle {
+            text-align: center;
+            font-size: 8px;
+            margin-bottom: 6px;
+            color: #555;
+        }
+        
+        .ticket-header {
+            text-align: center;
+            border-bottom: 1px dashed #ccc;
+            margin-bottom: 6px;
+            padding-bottom: 4px;
+        }
+        
+        .ticket-code {
+            background: #f0f0f0;
+            padding: 4px 6px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 9px;
+        }
+        
+        .ticket-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3px 8px;
+            margin-bottom: 8px;
+            font-size: 9px;
+        }
+        
+        .ticket-details-full {
+            grid-column: span 2;
+        }
+        
+        .ticket-details div {
+            line-height: 1.25;
+        }
+        
+        .ticket-details small {
+            font-size: 7px;
+            color: #666;
+            display: block;
+        }
+        
+        .ticket-details strong {
+            font-size: 9px;
+            word-break: break-word;
+            font-weight: 600;
+        }
+        
+        .signature-area {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            text-align: center;
+            margin-top: 8px;
+            padding-top: 6px;
+            border-top: 1px dashed #ccc;
+            gap: 6px;
+        }
+        
+        .signature-line {
+            border-bottom: 1px solid #000;
+            height: 20px;
+            margin-bottom: 2px;
+        }
+        
+        .signature-area small {
+            font-size: 7px;
+            color: #666;
+        }
+        
+        .ticket-obs {
+            margin-top: 6px;
+            text-align: center;
+            font-size: 8px;
+            color: #666;
+            padding: 3px;
+            background: #f9f9f9;
+            border-radius: 3px;
+            word-break: break-word;
+        }
+        
+        .ticket-warning {
+            margin-top: 6px;
+            text-align: center;
+            font-size: 8px;
+            color: #e67e22;
+            font-weight: bold;
+            padding: 3px;
+            background: #fff3e0;
+            border-radius: 3px;
+        }
+        
+        .divider-line {
+            text-align: center;
+            color: #e74c3c;
+            font-size: 10px;
+            letter-spacing: 2px;
+            margin: 8px 0;
+            font-weight: bold;
         }
         
         .status-badge {
@@ -459,36 +583,123 @@
             .menu { flex-direction: row; flex-wrap: wrap; }
             .menu-btn { width: auto; }
             .chart-container { height: 250px; }
+            .ticket-copy {
+                max-width: 95%;
+                min-width: auto;
+            }
         }
         
+        /* ESTILOS DE IMPRESIÓN CORREGIDOS - TICKET COMPLETO */
         @media print {
-            .sidebar, .header, .modal-footer, .theme-toggle, .menu, .filters-bar, .action-btns, .sync-status, .modal-header, .close-modal, .btn {
+            /* Ocultar elementos que no deben imprimirse */
+            .sidebar, .header, .modal-footer, .theme-toggle, .menu, 
+            .filters-bar, .action-btns, .sync-status, .modal-header, 
+            .close-modal, .btn, .logout-btn, .user-info, .header-info,
+            .modal-footer button:not(#printTicketBtn) {
                 display: none !important;
             }
+            
+            /* Configuración de página para tamaño carta */
+            @page {
+                size: letter;
+                margin: 0.8cm 0.5cm;
+            }
+            
+            /* Reset del modal para impresión */
             .modal {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: white;
-                display: flex !important;
+                position: relative !important;
+                display: block !important;
+                background: white !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+                height: auto !important;
+                overflow: visible !important;
+                padding: 0 !important;
+                margin: 0 !important;
             }
+            
             .modal-content {
-                max-width: 100%;
-                width: 100%;
-                margin: 0;
-                padding: 0;
-                box-shadow: none;
+                position: relative !important;
+                max-width: 100% !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+                background: white !important;
+                border-radius: 0 !important;
+                overflow: visible !important;
+                max-height: none !important;
+                height: auto !important;
             }
+            
+            .modal-header {
+                display: none !important;
+            }
+            
             .modal-body {
-                padding: 15px;
+                padding: 0 !important;
+                background: white !important;
+                overflow: visible !important;
             }
+            
+            .ticket-container {
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                justify-content: flex-start !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                gap: 0 !important;
+            }
+            
             .ticket-copy {
-                page-break-inside: avoid;
-                break-inside: avoid;
-                margin-bottom: 20px;
-                border: 2px solid #000;
+                border: 2px solid #000 !important;
+                margin: 0 auto 15px auto !important;
+                page-break-after: avoid !important;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                break-after: avoid !important;
+                box-shadow: none !important;
+                max-width: 80mm !important;
+                width: 100% !important;
+                position: relative !important;
+                top: 0 !important;
+                left: 0 !important;
+                transform: none !important;
+            }
+            
+            /* Asegurar que el primer ticket no se corte */
+            .ticket-copy:first-child {
+                margin-top: 0 !important;
+                page-break-before: avoid !important;
+            }
+            
+            .divider-line {
+                margin: 10px auto !important;
+                page-break-after: avoid !important;
+                page-break-before: avoid !important;
+                text-align: center !important;
+                width: 100% !important;
+            }
+            
+            body {
+                background: white !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            
+            /* Botón de imprimir dentro del modal */
+            #printTicketBtn {
+                display: none !important;
+            }
+        }
+        
+        /* Estilo específico para pantalla cuando se muestra el ticket */
+        @media screen {
+            .ticket-copy {
+                margin: 0 auto 12px auto;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             }
         }
     </style>
@@ -625,10 +836,9 @@
                                 <h3>Detalle por Centro</h3>
                                 <table id="detalleMetricas">
                                     <thead>
-                                        <tr><th>Centro de Operaciones</th><th>Total Litros</th><th>Total Costo ($)</th><th>Cantidad de Tickets</th></tr>
-                                    </thead>
+                                        <tr><th>Centro de Operaciones</th><th>Total Litros</th><th>Total Costo ($)</th><th>Cantidad de Tickets</th> </thead>
                                     <tbody id="detalleMetricasBody"></tbody>
-                                </table>
+                                 </table>
                             </div>
                         </div>
                     </section>
@@ -646,8 +856,7 @@
                             <div class="table-container">
                                 <table id="historialTable">
                                     <thead>
-                                        <tr><th>Fecha</th><th>Ticket</th><th>Placa</th><th>CO</th><th>Solicitante</th><th>Tipo</th><th>Litros</th><th>Costo</th><th>Estado</th><th>Acciones</th></tr>
-                                    </thead>
+                                        <tr><th>Fecha</th><th>Ticket</th><th>Placa</th><th>CO</th><th>Solicitante</th><th>Tipo</th><th>Litros</th><th>Costo</th><th>Estado</th><th>Acciones</th> </thead>
                                     <tbody id="historialBody">
                                         <tr><td colspan="10" style="text-align:center; padding:40px;">Cargando datos...</td></tr>
                                     </tbody>
@@ -1082,41 +1291,52 @@
             document.getElementById('totalRecords').textContent = registros.length;
         }
         
+        // FUNCIÓN MEJORADA PARA GENERAR TICKET CON FORMATO OPTIMIZADO
         function generateTwoCopiesTicketHTML(ticket) {
             const safe = (v, d = '-') => v === undefined || v === null ? d : v;
             const isCompleted = ticket.litros && ticket.litros > 0;
             const litrosDisplay = isCompleted ? `${(ticket.litros || 0).toFixed(2)} L` : '__________ L (llenar en estación)';
             const costoDisplay = isCompleted ? `$${(ticket.costoTotal || 0).toFixed(2)}` : '__________ $ (calcular al llenar)';
+            const tipoDisplay = ticket.tipo === 'gasolina' ? 'GASOLINA (0.50$/L)' : 'GASOIL (0.48$/L)';
+            const precioUnitario = ticket.tipo === 'gasolina' ? '0.50' : '0.48';
             
-            const content = `
-                <div style="text-align:center; border-bottom:1px dashed #ccc; margin-bottom:8px;">
-                    <h2 style="margin:0;">INTER</h2>
-                    <small>Tu mundo, nuestro compromiso.</small>
+            const ticketHTML = `
+                <div class="ticket-copy">
+                    <div class="ticket-header">
+                        <h2>INTER</h2>
+                        <div class="subtitle">Tu mundo, nuestro compromiso.</div>
+                        <div style="font-size:8px;">CONTROL DE COMBUSTIBLE</div>
+                    </div>
+                    <div class="ticket-code">
+                        <span>N° TICKET</span>
+                        <strong>${safe(ticket.numero)}</strong>
+                    </div>
+                    <div class="ticket-details">
+                        <div><small>📅 FECHA</small><br><strong>${formatDate(ticket.fecha)}</strong></div>
+                        <div><small>🏢 CENTRO</small><br><strong>${safe(ticket.centro)}</strong></div>
+                        ${ticket.departamentoMSO ? `<div><small>📁 DEPTO MSO</small><br><strong>${safe(ticket.departamentoMSO)}</strong></div>` : '<div></div>'}
+                        <div><small>🚗 PLACA</small><br><strong>${safe(ticket.placa)}</strong></div>
+                        <div><small>⛽ TIPO</small><br><strong>${tipoDisplay}</strong></div>
+                        <div><small>💰 PRECIO/L</small><br><strong>$${precioUnitario}</strong></div>
+                        <div><small>👤 SOLICITANTE</small><br><strong>${safe(ticket.solicitante)}</strong></div>
+                        <div><small>📊 LITROS</small><br><strong>${litrosDisplay}</strong></div>
+                        <div><small>💵 COSTO TOTAL</small><br><strong>${costoDisplay}</strong></div>
+                        <div><small>✍️ AUTORIZADO POR</small><br><strong>${safe(ticket.autorizado)}</strong></div>
+                    </div>
+                    <div class="signature-area">
+                        <div><div class="signature-line"></div><small>NOMBRE ISLERO</small></div>
+                        <div><div class="signature-line"></div><small>CÉDULA</small></div>
+                        <div><div class="signature-line"></div><small>FIRMA</small></div>
+                    </div>
+                    <div class="ticket-obs">
+                        📝 OBSERVACIONES: ${safe(ticket.obs, 'Sin observaciones')}
+                    </div>
+                    ${!isCompleted ? '<div class="ticket-warning">⚠️ IMPORTANTE: El islero debe llenar los litros y calcular el costo antes de firmar. ⚠️</div>' : '<div class="ticket-warning" style="background:#e8f5e9; color:#27ae60;">✅ TICKET COMPLETADO</div>'}
+                    <div style="text-align:center; font-size:7px; margin-top:4px; color:#999;">Sistema de Control de Combustibles INTER</div>
                 </div>
-                <div style="display:flex; justify-content:space-between; background:#f0f0f0; padding:4px 8px; margin-bottom:8px;">
-                    <span><strong>CONTROL COMBUSTIBLE</strong></span>
-                    <span><strong>N° ${safe(ticket.numero)}</strong></span>
-                </div>
-                <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:4px 12px; margin-bottom:8px;">
-                    <div><small>📅 FECHA</small><br><strong>${formatDate(ticket.fecha)}</strong></div>
-                    <div><small>🏢 CENTRO</small><br><strong>${safe(ticket.centro)}</strong></div>
-                    ${ticket.departamentoMSO ? `<div><small>📁 DEPTO MSO</small><br><strong>${safe(ticket.departamentoMSO)}</strong></div>` : '<div></div>'}
-                    <div><small>🚗 PLACA</small><br><strong>${safe(ticket.placa)}</strong></div>
-                    <div><small>⛽ TIPO</small><br><strong>${ticket.tipo === 'gasolina' ? 'GASOLINA (0.50$/L)' : 'GASOIL (0.48$/L)'}</strong></div>
-                    <div><small>👤 SOLICITANTE</small><br><strong>${safe(ticket.solicitante)}</strong></div>
-                    <div><small>📊 LITROS</small><br><strong>${litrosDisplay}</strong></div>
-                    <div><small>💰 COSTO</small><br><strong>${costoDisplay}</strong></div>
-                    <div><small>✍️ AUTORIZADO</small><br><strong>${safe(ticket.autorizado)}</strong></div>
-                </div>
-                <div style="display:grid; grid-template-columns:repeat(3,1fr); text-align:center; margin-top:8px; padding-top:8px; border-top:1px dashed #ccc;">
-                    <div><div style="border-bottom:1px solid #000; height:20px;"></div><small>NOMBRE ISLERO</small></div>
-                    <div><div style="border-bottom:1px solid #000; height:20px;"></div><small>CÉDULA</small></div>
-                    <div><div style="border-bottom:1px solid #000; height:20px;"></div><small>FIRMA</small></div>
-                </div>
-                <div style="margin-top:6px; text-align:center; font-size:10px; color:#666;">📝 ${safe(ticket.obs, 'Sin observaciones')}</div>
-                ${!isCompleted ? '<div style="margin-top:8px; text-align:center; font-size:11px; color:#e67e22;"><i class="fas fa-pen"></i> IMPORTANTE: El islero debe llenar los litros y calcular el costo antes de firmar.</div>' : ''}
             `;
-            return `<div style="display:flex; flex-direction:column; gap:8px;"><div class="ticket-copy">${content}</div><div style="text-align:center; color:#e74c3c;">—•—•—•—•—•—•—•—•—•—•—•—•—•—•—•</div><div class="ticket-copy">${content}</div></div>`;
+            
+            return `<div class="ticket-container">${ticketHTML}<div class="divider-line">—•—•—•—•—•—•—•—•—•—•—•—•—•—•—•</div>${ticketHTML}</div>`;
         }
         
         window.completarTicket = async function(id) {
