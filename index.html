@@ -361,7 +361,6 @@
             margin-bottom: 20px;
         }
 
-        /* Tickets */
         .ticket-copy {
             width: 15cm;
             height: 10cm;
@@ -493,7 +492,7 @@
                 <span class="user-badge supervisor" onclick="selectUser('javier.mosquera')">Javier Mosquera</span>
             </div>
             <div class="login-note" style="margin-top: 1rem; text-align: center; font-size: 0.7rem; color: #999;">
-                <i class="fas fa-key"></i> Contraseña: Admin1234 (Admin) / Inter1234 (Supervisores)
+                <i class="fas fa-key"></i> Cada usuario conoce su contraseña personal
             </div>
         </div>
     </div>
@@ -607,7 +606,8 @@
                                             <th>Total Litros</th>
                                             <th>Total Costo ($)</th>
                                             <th>Cantidad de Tickets</th>
-                                        </thead>
+                                        </tr>
+                                    </thead>
                                     <tbody id="detalleMetricasBody"></tbody>
                                 </table>
                             </div>
@@ -629,7 +629,8 @@
                                     <thead>
                                         <tr>
                                             <th>Fecha</th><th>Ticket</th><th>Placa</th><th>CO</th><th>Depto MSO</th><th>Solicitante</th><th>Tipo</th><th>Litros</th><th>Costo</th><th>Autorizado</th><th>Acciones</th>
-                                        </thead>
+                                        </tr>
+                                    </thead>
                                     <tbody id="historialBody">
                                         <tr><td colspan="11" style="text-align:center; padding:40px;">Cargando datos...</td></tr>
                                     </tbody>
@@ -646,7 +647,6 @@
     <div id="ticketModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Ticket de Combustible</h3><span class="close-modal">&times;</span></div><div class="modal-body" id="ticketModalBody"></div><div class="modal-footer"><button id="printTicketBtn" class="btn btn-success">Imprimir</button><button class="close-modal btn btn-secondary">Cerrar</button></div></div></div>
 
     <script type="module">
-        // ==================== CONFIGURACIÓN ====================
         const USUARIOS = {
             admin: { password: "Admin1234", role: "admin", name: "Administrador", centro: null },
             "jairo.tovar": { password: "Inter1234", role: "supervisor", name: "Jairo Tovar", centro: "Los Ruices" },
@@ -676,31 +676,24 @@
         let barrasChart = null;
         let unsubscribe = null;
         
-        // ==================== FUNCIONES DE FECHA CORREGIDAS ====================
-        // Obtener fecha actual de Venezuela (GMT-4) en formato YYYY-MM-DD
         function getVenezuelaDateString() {
             const now = new Date();
-            // Ajustar a GMT-4 (Venezuela)
             const venezuelaOffset = -4;
             const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
             const venezuelaTime = new Date(utc + (venezuelaOffset * 3600000));
-            
             const year = venezuelaTime.getFullYear();
             const month = String(venezuelaTime.getMonth() + 1).padStart(2, '0');
             const day = String(venezuelaTime.getDate()).padStart(2, '0');
-            
             return `${year}-${month}-${day}`;
         }
         
-        // Formatear fecha para mostrar (DD/MM/YYYY)
         function formatDate(dateStr) {
             if (!dateStr) return '--/--/----';
-            if (dateStr.includes('/')) return dateStr;
             const parts = dateStr.split('-');
             if (parts.length === 3) {
                 return `${parts[2]}/${parts[1]}/${parts[0]}`;
             }
-            return '--/--/----';
+            return dateStr;
         }
         
         function getToday() { 
@@ -723,7 +716,6 @@
             return costo;
         }
         
-        // ==================== LOGIN ====================
         window.selectUser = function(username) { 
             document.getElementById('loginUser').value = username;
             document.querySelectorAll('.user-badge').forEach(b => b.classList.remove('selected-user'));
@@ -781,7 +773,6 @@
             document.getElementById('loginPass').value = '';
         }
         
-        // ==================== FIREBASE OPERACIONES ====================
         function updateSyncStatus(status, message = null) {
             const statusEl = document.getElementById('syncStatus');
             if (!statusEl) return;
@@ -872,7 +863,6 @@
             return false;
         }
         
-        // ==================== MÉTRICAS - GRÁFICO DE BARRAS ====================
         function actualizarMetricas() {
             if(currentUser.role !== 'admin') return;
             
@@ -880,7 +870,6 @@
             const periodo = document.getElementById('metricPeriodo')?.value;
             const month = document.getElementById('metricMonth')?.value;
             const year = document.getElementById('metricYear')?.value;
-            
             const today = getToday();
             
             if (periodo === 'diario') {
@@ -900,17 +889,9 @@
                 filtered = filtered.filter(r => r.fecha && r.fecha.startsWith(year));
             }
             
-            // Centros de operaciones
             const centros = ["Los Ruices", "El Rosal", "La Naya", "El Paraiso", "MSO Caracas", "MSO Visita"];
             const datosPorCentro = {};
-            
-            centros.forEach(centro => {
-                datosPorCentro[centro] = {
-                    litros: 0,
-                    costo: 0,
-                    tickets: 0
-                };
-            });
+            centros.forEach(centro => { datosPorCentro[centro] = { litros: 0, costo: 0, tickets: 0 }; });
             
             filtered.forEach(r => {
                 if (r.centro && datosPorCentro[r.centro]) {
@@ -920,100 +901,37 @@
                 }
             });
             
-            // Actualizar tabla de detalle
             const tbody = document.getElementById('detalleMetricasBody');
             if (tbody) {
                 let html = '';
                 for (const [centro, datos] of Object.entries(datosPorCentro)) {
                     if (datos.litros > 0 || datos.tickets > 0) {
-                        html += `
-                            60
-                                <td><strong>${centro}</strong>\\
-                                <td>${datos.litros.toFixed(2)} L\\
-                                <td>$${datos.costo.toFixed(2)}\\
-                                <td>${datos.tickets}\\
-                            60
-                        `;
+                        html += `<tr><td><strong>${centro}</strong></td><td>${datos.litros.toFixed(2)} L</td><td>$${datos.costo.toFixed(2)}</td><td>${datos.tickets}</td></tr>`;
                     }
                 }
                 if (html === '') {
-                    html = '§<td colspan="4" style="text-align:center; padding:40px;">No hay datos en el período seleccionado</td>§';
+                    html = '<tr><td colspan="4" style="text-align:center; padding:40px;">No hay datos en el período seleccionado</td></tr>';
                 }
                 tbody.innerHTML = html;
             }
             
-            // Crear gráfico de barras
             const ctx = document.getElementById('barrasChart')?.getContext('2d');
             if (ctx) {
                 if (barrasChart) barrasChart.destroy();
-                
                 const labels = [];
                 const litrosData = [];
                 const colores = ['#3498db', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6', '#1abc9c'];
-                
                 for (const [centro, datos] of Object.entries(datosPorCentro)) {
                     if (datos.litros > 0) {
                         labels.push(centro);
                         litrosData.push(datos.litros);
                     }
                 }
-                
-                if (labels.length === 0) {
-                    labels.push("Sin datos");
-                    litrosData.push(0);
-                }
-                
+                if (labels.length === 0) { labels.push("Sin datos"); litrosData.push(0); }
                 barrasChart = new Chart(ctx, {
                     type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: 'Litros Consumidos',
-                            data: litrosData,
-                            backgroundColor: colores.slice(0, labels.length),
-                            borderColor: '#2c3e50',
-                            borderWidth: 1,
-                            borderRadius: 8
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'top',
-                            },
-                            title: {
-                                display: true,
-                                text: `Consumo de Combustible por Centro - ${periodo === 'diario' ? 'Hoy' : periodo === 'semanal' ? 'Última Semana' : periodo === 'mensual' ? month : periodo === 'anual' ? year : 'Todos'}`,
-                                font: { size: 14 }
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        return `${context.raw.toFixed(2)} Litros`;
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                title: {
-                                    display: true,
-                                    text: 'Litros',
-                                    font: { weight: 'bold' }
-                                }
-                            },
-                            x: {
-                                title: {
-                                    display: true,
-                                    text: 'Centro de Operaciones',
-                                    font: { weight: 'bold' }
-                                }
-                            }
-                        }
-                    }
+                    data: { labels: labels, datasets: [{ label: 'Litros Consumidos', data: litrosData, backgroundColor: colores.slice(0, labels.length), borderColor: '#2c3e50', borderWidth: 1, borderRadius: 8 }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' }, title: { display: true, text: `Consumo de Combustible por Centro - ${periodo === 'diario' ? 'Hoy' : periodo === 'semanal' ? 'Última Semana' : periodo === 'mensual' ? month : periodo === 'anual' ? year : 'Todos'}`, font: { size: 14 } } }, scales: { y: { beginAtZero: true, title: { display: true, text: 'Litros' } }, x: { title: { display: true, text: 'Centro de Operaciones' } } } }
                 });
             }
         }
@@ -1025,12 +943,9 @@
             const periodo = document.getElementById('metricPeriodo')?.value;
             const month = document.getElementById('metricMonth')?.value;
             const year = document.getElementById('metricYear')?.value;
-            
             const today = getToday();
             
-            if (periodo === 'diario') {
-                filtered = filtered.filter(r => r.fecha === today);
-            } 
+            if (periodo === 'diario') filtered = filtered.filter(r => r.fecha === today);
             else if (periodo === 'semanal') {
                 const todayDate = new Date(today);
                 const weekAgo = new Date(todayDate);
@@ -1038,19 +953,12 @@
                 const weekAgoStr = weekAgo.toISOString().slice(0,10);
                 filtered = filtered.filter(r => r.fecha && r.fecha >= weekAgoStr);
             } 
-            else if (periodo === 'mensual' && month) {
-                filtered = filtered.filter(r => r.fecha && r.fecha.startsWith(month));
-            } 
-            else if (periodo === 'anual' && year) {
-                filtered = filtered.filter(r => r.fecha && r.fecha.startsWith(year));
-            }
+            else if (periodo === 'mensual' && month) filtered = filtered.filter(r => r.fecha && r.fecha.startsWith(month));
+            else if (periodo === 'anual' && year) filtered = filtered.filter(r => r.fecha && r.fecha.startsWith(year));
             
             const centros = ["Los Ruices", "El Rosal", "La Naya", "El Paraiso", "MSO Caracas", "MSO Visita"];
             const datosPorCentro = {};
-            
-            centros.forEach(centro => {
-                datosPorCentro[centro] = { litros: 0, costo: 0, tickets: 0 };
-            });
+            centros.forEach(centro => { datosPorCentro[centro] = { litros: 0, costo: 0, tickets: 0 }; });
             
             filtered.forEach(r => {
                 if (r.centro && datosPorCentro[r.centro]) {
@@ -1062,11 +970,9 @@
             
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('landscape');
-            
             doc.setFontSize(18);
             doc.setTextColor(26, 41, 128);
             doc.text('Reporte de Consumo de Combustible', 14, 20);
-            
             doc.setFontSize(11);
             doc.setTextColor(100, 100, 100);
             let periodoTexto = '';
@@ -1074,83 +980,35 @@
             else if (periodo === 'semanal') periodoTexto = 'Período: Últimos 7 días';
             else if (periodo === 'mensual') periodoTexto = `Mes: ${month}`;
             else if (periodo === 'anual') periodoTexto = `Año: ${year}`;
-            else periodoTexto = 'Todos los registros';
             doc.text(`Período: ${periodoTexto}`, 14, 28);
-            
-            const now = new Date();
-            const fechaHora = `${now.toLocaleDateString('es-VE')} ${now.toLocaleTimeString('es-VE')}`;
-            doc.text(`Generado: ${fechaHora}`, 14, 34);
+            doc.text(`Generado: ${new Date().toLocaleString('es-VE')}`, 14, 34);
             
             const tablaData = [];
             let totalLitros = 0, totalCosto = 0, totalTickets = 0;
-            
             for (const [centro, datos] of Object.entries(datosPorCentro)) {
                 if (datos.litros > 0 || datos.tickets > 0) {
-                    tablaData.push([
-                        centro,
-                        datos.litros.toFixed(2),
-                        `$${datos.costo.toFixed(2)}`,
-                        datos.tickets
-                    ]);
+                    tablaData.push([centro, datos.litros.toFixed(2), `$${datos.costo.toFixed(2)}`, datos.tickets]);
                     totalLitros += datos.litros;
                     totalCosto += datos.costo;
                     totalTickets += datos.tickets;
                 }
             }
+            if (tablaData.length === 0) tablaData.push(['No hay datos', '0', '$0', '0']);
+            else tablaData.push(['TOTAL', totalLitros.toFixed(2), `$${totalCosto.toFixed(2)}`, totalTickets]);
             
-            if (tablaData.length === 0) {
-                tablaData.push(['No hay datos', '0', '$0', '0']);
-            } else {
-                tablaData.push(['TOTAL', totalLitros.toFixed(2), `$${totalCosto.toFixed(2)}`, totalTickets]);
-            }
-            
-            doc.autoTable({
-                head: [['Centro de Operaciones', 'Litros', 'Costo Total', 'N° Tickets']],
-                body: tablaData,
-                startY: 42,
-                theme: 'striped',
-                headStyles: { fillColor: [52, 152, 219], textColor: 255 },
-                styles: { fontSize: 10, cellPadding: 5 },
-                columnStyles: {
-                    0: { cellWidth: 50 },
-                    1: { cellWidth: 40 },
-                    2: { cellWidth: 40 },
-                    3: { cellWidth: 35 }
-                }
-            });
+            doc.autoTable({ head: [['Centro de Operaciones', 'Litros', 'Costo Total', 'N° Tickets']], body: tablaData, startY: 42, theme: 'striped', headStyles: { fillColor: [52, 152, 219], textColor: 255 } });
             
             const finalY = doc.lastAutoTable.finalY + 10;
-            
             if (filtered.length > 0) {
                 doc.text('Detalle de Tickets', 14, finalY);
-                const detalleData = filtered.slice(0, 30).map(r => [
-                    formatDate(r.fecha),
-                    r.numero || '-',
-                    r.placa || '-',
-                    r.centro || '-',
-                    (r.litros || 0).toFixed(2),
-                    `$${(r.costoTotal || 0).toFixed(2)}`
-                ]);
-                
-                doc.autoTable({
-                    head: [['Fecha', 'Ticket', 'Placa', 'Centro', 'Litros', 'Costo']],
-                    body: detalleData,
-                    startY: finalY + 5,
-                    theme: 'striped',
-                    headStyles: { fillColor: [52, 152, 219], textColor: 255 },
-                    styles: { fontSize: 8 }
-                });
-                
-                if (filtered.length > 30) {
-                    doc.text(`* Mostrando los últimos 30 de ${filtered.length} tickets`, 14, doc.lastAutoTable.finalY + 5);
-                }
+                const detalleData = filtered.slice(0, 30).map(r => [formatDate(r.fecha), r.numero || '-', r.placa || '-', r.centro || '-', (r.litros || 0).toFixed(2), `$${(r.costoTotal || 0).toFixed(2)}`]);
+                doc.autoTable({ head: [['Fecha', 'Ticket', 'Placa', 'Centro', 'Litros', 'Costo']], body: detalleData, startY: finalY + 5, theme: 'striped', headStyles: { fillColor: [52, 152, 219], textColor: 255 }, styles: { fontSize: 8 } });
+                if (filtered.length > 30) doc.text(`* Mostrando los últimos 30 de ${filtered.length} tickets`, 14, doc.lastAutoTable.finalY + 5);
             }
-            
             doc.save(`reporte_consumo_${periodo}_${today}.pdf`);
             alert(`✅ Reporte PDF generado con ${filtered.length} registros`);
         }
         
-        // ==================== ACTUALIZACIÓN DE UI ====================
         function updateStats() {
             const today = getToday();
             const hoy = registros.filter(r => r.fecha === today);
@@ -1164,16 +1022,13 @@
         
         function updateHistorialTable() {
             let filtered = [...registros];
-            
             if(currentUser && currentUser.role === 'supervisor' && currentUser.centro) {
                 filtered = filtered.filter(r => r.centro === currentUser.centro);
             }
-            
             const placa = document.getElementById('filterPlaca')?.value.toLowerCase() || '';
             const solicitante = document.getElementById('filterSolicitante')?.value.toLowerCase() || '';
             const co = document.getElementById('filterCO')?.value || '';
             const fecha = document.getElementById('filterDate')?.value || '';
-            
             if(placa) filtered = filtered.filter(r => (r.placa || '').toLowerCase().includes(placa));
             if(solicitante) filtered = filtered.filter(r => (r.solicitante || '').toLowerCase().includes(solicitante));
             if(co && currentUser.role === 'admin') filtered = filtered.filter(r => r.centro === co);
@@ -1181,41 +1036,35 @@
             
             const tbody = document.getElementById('historialBody');
             if (!tbody) return;
-            
             if (filtered.length === 0) {
-                tbody.innerHTML = '§<td colspan="11" style="text-align:center; padding:40px;">No hay registros disponibles</td>§';
+                tbody.innerHTML = '<tr><td colspan="11" style="text-align:center; padding:40px;">No hay registros disponibles</td></tr>';
                 return;
             }
-            
             let html = '';
             for (let r of filtered) {
-                html += `
-                    <tr>
-                        <td>${formatDate(r.fecha)}</td>
-                        <td><strong>${r.numero || '-'}</strong></td>
-                        <td>${r.placa || '-'}</td>
-                        <td>${r.centro || '-'}</td>
-                        <td>${r.departamentoMSO || '-'}</td>
-                        <td>${r.solicitante || '-'}</td>
-                        <td>${r.tipo === 'gasolina' ? '⛽ Gasolina' : '🛢️ Gasoil'}</td>
-                        <td>${(r.litros || 0).toFixed(2)}</td>
-                        <td>$${(r.costoTotal || 0).toFixed(2)}</td>
-                        <td>${r.autorizado || '-'}</td>
-                        <td class="action-btns">
-                            <button class="action-btn edit-btn" onclick="window.editRegistro('${r.id}')">Editar</button>
-                            ${currentUser.role === 'admin' ? `<button class="action-btn delete-btn" onclick="window.deleteRegistro('${r.id}')">Eliminar</button>` : ''}
-                            <button class="action-btn print-btn" onclick="window.reimprimirTicket('${r.id}')">Reimprimir</button>
-                        </td>
-                    </tr>
-                `;
+                html += `<tr>
+                    <td>${formatDate(r.fecha)}</td>
+                    <td><strong>${r.numero || '-'}</strong></td>
+                    <td>${r.placa || '-'}</td>
+                    <td>${r.centro || '-'}</td>
+                    <td>${r.departamentoMSO || '-'}</td>
+                    <td>${r.solicitante || '-'}</td>
+                    <td>${r.tipo === 'gasolina' ? '⛽ Gasolina' : '🛢️ Gasoil'}</td>
+                    <td>${(r.litros || 0).toFixed(2)}</td>
+                    <td>$${(r.costoTotal || 0).toFixed(2)}</td>
+                    <td>${r.autorizado || '-'}</td>
+                    <td class="action-btns">
+                        <button class="action-btn edit-btn" onclick="window.editRegistro('${r.id}')">Editar</button>
+                        ${currentUser.role === 'admin' ? `<button class="action-btn delete-btn" onclick="window.deleteRegistro('${r.id}')">Eliminar</button>` : ''}
+                        <button class="action-btn print-btn" onclick="window.reimprimirTicket('${r.id}')">Reimprimir</button>
+                    </td>
+                </tr>`;
             }
             tbody.innerHTML = html;
         }
         
-        // ==================== TICKETS ====================
         function generateTwoCopiesTicketHTML(ticket) {
             const safe = (v, d = '-') => v === undefined || v === null ? d : v;
-            
             const content = `
                 <div style="text-align:center; border-bottom:1px dashed #ccc; margin-bottom:8px;">
                     <h2 style="margin:0;">INTER</h2>
@@ -1243,13 +1092,7 @@
                 </div>
                 <div style="margin-top:6px; text-align:center; font-size:10px; color:#666;">📝 ${safe(ticket.obs, 'Sin observaciones')}</div>
             `;
-            return `
-                <div style="display:flex; flex-direction:column; gap:8px;">
-                    <div class="ticket-copy">${content}</div>
-                    <div style="text-align:center; color:#e74c3c;">—•—•—•—•—•—•—•—•—•—•—•—•—•—•—•</div>
-                    <div class="ticket-copy">${content}</div>
-                </div>
-            `;
+            return `<div style="display:flex; flex-direction:column; gap:8px;"><div class="ticket-copy">${content}</div><div style="text-align:center; color:#e74c3c;">—•—•—•—•—•—•—•—•—•—•—•—•—•—•—•</div><div class="ticket-copy">${content}</div></div>`;
         }
         
         window.editRegistro = async function(id) {
@@ -1292,7 +1135,6 @@
             }
         };
         
-        // ==================== INICIALIZACIÓN ====================
         function init() {
             const today = getToday();
             document.getElementById('ticketFecha').value = today;
@@ -1300,10 +1142,7 @@
             document.getElementById('metricMonth').value = today.slice(0,7);
             document.getElementById('metricYear').value = today.slice(0,4);
             
-            // Actualizar fecha cada minuto
-            function updateDate() {
-                document.getElementById('currentDate').textContent = formatDate(getToday());
-            }
+            function updateDate() { document.getElementById('currentDate').textContent = formatDate(getToday()); }
             updateDate();
             setInterval(updateDate, 60000);
             
@@ -1314,28 +1153,19 @@
                 const centro = document.getElementById('ticketCO').value;
                 if(!centro) { alert("Seleccione centro de operaciones"); return; }
                 if(!litros || litros <= 0) { alert("Ingrese una cantidad de litros válida"); return; }
-                
                 let deptoMSO = '';
                 if(centro === 'MSO Caracas') {
                     deptoMSO = document.getElementById('departamentoMSO').value;
                     if(!deptoMSO) { alert('Seleccione departamento MSO'); return; }
                 }
-                
                 const newRegistro = {
-                    numero: generateTicketNumber(),
-                    fecha: getToday(),
-                    centro, 
-                    departamentoMSO: deptoMSO,
+                    numero: generateTicketNumber(), fecha: getToday(), centro, departamentoMSO: deptoMSO,
                     solicitante: document.getElementById('ticketSolicitante').value,
-                    placa: document.getElementById('ticketPlaca').value.toUpperCase(), 
-                    tipo, 
-                    litros: litros,
+                    placa: document.getElementById('ticketPlaca').value.toUpperCase(), tipo, litros,
                     costoTotal: litros * (tipo==='gasolina'?0.50:0.48),
-                    autorizado: document.getElementById('ticketAutorizado').value, 
-                    obs: document.getElementById('ticketObs').value,
+                    autorizado: document.getElementById('ticketAutorizado').value, obs: document.getElementById('ticketObs').value,
                     createdAt: new Date().toISOString()
                 };
-                
                 const success = await addRegistro(newRegistro);
                 if(success) {
                     document.getElementById('ticketModalBody').innerHTML = generateTwoCopiesTicketHTML(newRegistro);
