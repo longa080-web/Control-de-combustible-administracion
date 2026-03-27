@@ -380,14 +380,6 @@
             color: black;
         }
         
-        .ticket-field-blank {
-            border-bottom: 1px dashed #000;
-            display: inline-block;
-            min-width: 80px;
-            text-align: center;
-            margin: 0 4px;
-        }
-        
         .status-badge {
             display: inline-block;
             padding: 2px 8px;
@@ -562,7 +554,7 @@
                             <p style="color: var(--accent-orange); margin-bottom: 1rem;"><i class="fas fa-info-circle"></i> Complete los datos del vehículo y autorización. El campo LITROS se completará DESPUÉS de surtir el combustible.</p>
                             <form id="ticketForm">
                                 <div class="form-grid">
-                                    <div class="form-group"><label>N° Ticket</label><input type="text" id="ticketNumero" readonly></div>
+                                    <div class="form-group"><label>N° Ticket</label><input type="text" id="ticketNumero" readonly style="background:#e8f5e9; font-weight:bold;"></div>
                                     <div class="form-group"><label>Fecha</label><input type="date" id="ticketFecha" readonly></div>
                                     <div class="form-group"><label>Centro de Operaciones *</label><select id="ticketCO" required>
                                         <option value="">Seleccione...</option>
@@ -570,6 +562,7 @@
                                         <option value="El Rosal">C.O El Rosal</option>
                                         <option value="La Naya">C.O La Naya</option>
                                         <option value="El Paraiso">C.O El Paraiso</option>
+                                        <option value="Obras">C.O Obras</option>
                                         <option value="MSO Caracas">MSO Caracas</option>
                                         <option value="MSO Visita">MSO Visita</option>
                                     </select></div>
@@ -587,17 +580,20 @@
                                             <option value="Corporativo MSO">Corporativo MSO</option>
                                         </select>
                                     </div>
-                                    <div class="form-group"><label>Solicitante *</label><input type="text" id="ticketSolicitante" required></div>
-                                    <div class="form-group"><label>Placa *</label><input type="text" id="ticketPlaca" required></div>
+                                    <div class="form-group"><label>Solicitante *</label><input type="text" id="ticketSolicitante" list="solicitantesList" required autocomplete="off"></div>
+                                    <div class="form-group"><label>Placa *</label><input type="text" id="ticketPlaca" list="placasList" required autocomplete="off" style="text-transform: uppercase;"></div>
                                     <div class="form-group"><label>Tipo Combustible *</label><select id="ticketTipo" required>
                                         <option value="gasolina">Gasolina ($0.50/L)</option>
                                         <option value="gasoil">Gasoil ($0.48/L)</option>
                                     </select></div>
                                     <div class="form-group"><label>Litros (se llenará después)</label><input type="number" id="ticketLitros" step="0.01" min="0" placeholder="Se completará al cargar" disabled style="background:#f0f0f0;"></div>
                                     <div class="form-group"><label>Costo Total</label><input type="text" id="costoTotalTicket" value="$0.00" readonly style="background:#e8f5e9;"></div>
-                                    <div class="form-group"><label>Autorizado por *</label><input type="text" id="ticketAutorizado" required></div>
+                                    <div class="form-group"><label>Autorizado por *</label><input type="text" id="ticketAutorizado" list="autorizadosList" required autocomplete="off"></div>
                                     <div class="form-group full-width"><label>Observaciones</label><textarea id="ticketObs" rows="2"></textarea></div>
                                 </div>
+                                <datalist id="solicitantesList"></datalist>
+                                <datalist id="placasList"></datalist>
+                                <datalist id="autorizadosList"></datalist>
                                 <div style="margin-top:1rem;">
                                     <button type="submit" class="btn btn-success"><i class="fas fa-print"></i> Generar Ticket (Pre-carga)</button>
                                     <button type="reset" class="btn btn-secondary">Limpiar</button>
@@ -628,15 +624,10 @@
                                 <h3>Detalle por Centro</h3>
                                 <table id="detalleMetricas">
                                     <thead>
-                                         <tr>
-                                            <th>Centro de Operaciones</th>
-                                            <th>Total Litros</th>
-                                            <th>Total Costo ($)</th>
-                                            <th>Cantidad de Tickets</th>
-                                        </tr>
+                                        32<th>Centro de Operaciones</th><th>Total Litros</th><th>Total Costo ($)</th><th>Cantidad de Tickets</th>
                                     </thead>
                                     <tbody id="detalleMetricasBody"></tbody>
-                                </table>
+                                 </table>
                             </div>
                         </div>
                     </section>
@@ -647,16 +638,14 @@
                             <div class="filters-bar">
                                 <div class="form-group"><input type="text" id="filterPlaca" placeholder="🔍 Placa"></div>
                                 <div class="form-group"><input type="text" id="filterSolicitante" placeholder="🔍 Solicitante"></div>
-                                <div class="form-group"><select id="filterCO"><option value="">Todos los CO</option><option value="Los Ruices">Los Ruices</option><option value="El Rosal">El Rosal</option><option value="La Naya">La Naya</option><option value="El Paraiso">El Paraiso</option><option value="MSO Caracas">MSO Caracas</option><option value="MSO Visita">MSO Visita</option></select></div>
+                                <div class="form-group"><select id="filterCO"><option value="">Todos los CO</option><option value="Los Ruices">Los Ruices</option><option value="El Rosal">El Rosal</option><option value="La Naya">La Naya</option><option value="El Paraiso">El Paraiso</option><option value="Obras">Obras</option><option value="MSO Caracas">MSO Caracas</option><option value="MSO Visita">MSO Visita</option></select></div>
                                 <div class="form-group"><input type="date" id="filterDate"></div>
                                 <button id="clearFilters" class="btn btn-secondary btn-sm">Limpiar</button>
                             </div>
                             <div class="table-container">
                                 <table id="historialTable">
                                     <thead>
-                                        <tr>
-                                            <th>Fecha</th><th>Ticket</th><th>Placa</th><th>CO</th><th>Solicitante</th><th>Tipo</th><th>Litros</th><th>Costo</th><th>Estado</th><th>Acciones</th>
-                                        </tr>
+                                        32<th>Fecha</th><th>Ticket</th><th>Placa</th><th>CO</th><th>Solicitante</th><th>Tipo</th><th>Litros</th><th>Costo</th><th>Estado</th><th>Acciones</th>
                                     </thead>
                                     <tbody id="historialBody">
                                         <tr><td colspan="10" style="text-align:center; padding:40px;">Cargando datos...</td></tr>
@@ -683,7 +672,7 @@
         };
         
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         
         const firebaseConfig = {
             apiKey: "AIzaSyCJPasb1Tpqcds0yQQQKOGl1df0DuzH9Ys",
@@ -702,6 +691,12 @@
         let registros = [];
         let barrasChart = null;
         let unsubscribe = null;
+        
+        let autocompletarData = {
+            solicitantes: new Set(),
+            placas: new Set(),
+            autorizados: new Set()
+        };
         
         function getVenezuelaDateString() {
             const now = new Date();
@@ -727,12 +722,48 @@
             return getVenezuelaDateString();
         }
         
-        function generateTicketNumber() {
+        function generateTicketNumber(centro, departamentoMSO = null) {
             const today = getVenezuelaDateString();
-            const year = today.slice(0,4);
+            const year = today.slice(2,4);
             const month = today.slice(5,7);
-            const count = registros.filter(r => r.fecha === getToday()).length + 1;
-            return `${year}${month}-${count.toString().padStart(4,'0')}`;
+            
+            let prefix = '';
+            if (centro === 'MSO Caracas' && departamentoMSO && departamentoMSO !== '') {
+                const deptoMap = {
+                    'Presidencia': 'PRE',
+                    'Documentacion de Obras': 'DOC',
+                    'Marketing': 'MKT',
+                    'Operaciones IP': 'OPIP',
+                    'Backbone': 'BB',
+                    'Importaciones': 'IMP',
+                    'RRHH MSO': 'RRHH',
+                    'Corporativo MSO': 'CORP'
+                };
+                prefix = deptoMap[departamentoMSO] || 'MSO';
+            } else {
+                const centroMap = {
+                    'Los Ruices': 'LR',
+                    'El Rosal': 'ER',
+                    'La Naya': 'LN',
+                    'El Paraiso': 'EP',
+                    'Obras': 'OBR',
+                    'MSO Caracas': 'MSO',
+                    'MSO Visita': 'MSOV'
+                };
+                prefix = centroMap[centro] || 'GEN';
+            }
+            
+            let registrosDelGrupo = registros.filter(r => {
+                if (r.fecha !== today) return false;
+                if (centro === 'MSO Caracas' && departamentoMSO && departamentoMSO !== '') {
+                    return r.centro === centro && r.departamentoMSO === departamentoMSO;
+                } else {
+                    return r.centro === centro && (!r.departamentoMSO || r.departamentoMSO === '');
+                }
+            });
+            
+            const count = registrosDelGrupo.length + 1;
+            return `${prefix}-${year}${month}-${count.toString().padStart(3,'0')}`;
         }
         
         function calcularCosto(litros, tipo) {
@@ -743,9 +774,52 @@
         window.selectUser = function(username) { 
             document.getElementById('loginUser').value = username;
             document.querySelectorAll('.user-badge').forEach(b => b.classList.remove('selected-user'));
-            event.target.classList.add('selected-user');
+            if(event && event.target) event.target.classList.add('selected-user');
             document.getElementById('loginPass').focus();
         };
+        
+        function actualizarAutocompletar() {
+            autocompletarData.solicitantes.clear();
+            autocompletarData.placas.clear();
+            autocompletarData.autorizados.clear();
+            
+            registros.forEach(r => {
+                if (r.solicitante) autocompletarData.solicitantes.add(r.solicitante);
+                if (r.placa) autocompletarData.placas.add(r.placa.toUpperCase());
+                if (r.autorizado) autocompletarData.autorizados.add(r.autorizado);
+            });
+            
+            const solicitantesList = document.getElementById('solicitantesList');
+            const placasList = document.getElementById('placasList');
+            const autorizadosList = document.getElementById('autorizadosList');
+            
+            if (solicitantesList) {
+                solicitantesList.innerHTML = '';
+                Array.from(autocompletarData.solicitantes).sort().forEach(s => {
+                    const option = document.createElement('option');
+                    option.value = s;
+                    solicitantesList.appendChild(option);
+                });
+            }
+            
+            if (placasList) {
+                placasList.innerHTML = '';
+                Array.from(autocompletarData.placas).sort().forEach(p => {
+                    const option = document.createElement('option');
+                    option.value = p;
+                    placasList.appendChild(option);
+                });
+            }
+            
+            if (autorizadosList) {
+                autorizadosList.innerHTML = '';
+                Array.from(autocompletarData.autorizados).sort().forEach(a => {
+                    const option = document.createElement('option');
+                    option.value = a;
+                    autorizadosList.appendChild(option);
+                });
+            }
+        }
         
         async function login() {
             const user = document.getElementById('loginUser').value.toLowerCase().trim();
@@ -810,18 +884,19 @@
             try {
                 updateSyncStatus('syncing');
                 if (unsubscribe) unsubscribe();
-                const q = query(ticketsCollection, orderBy('fecha', 'desc'));
-                unsubscribe = onSnapshot(q, (snapshot) => {
+                // CORREGIDO: Eliminamos el orderBy que causaba el error del índice
+                unsubscribe = onSnapshot(ticketsCollection, (snapshot) => {
                     registros = [];
                     snapshot.forEach((docSnap) => { 
                         const data = docSnap.data();
                         registros.push({ id: docSnap.id, ...data }); 
                     });
                     console.log("Registros cargados:", registros.length);
+                    actualizarAutocompletar();
                     updateUI();
                     updateSyncStatus('success');
                 }, (error) => {
-                    console.error("Error:", error);
+                    console.error("Error en Firebase:", error);
                     updateSyncStatus('error', 'Error de conexión');
                     cargarLocales();
                 });
@@ -835,9 +910,13 @@
             const localData = localStorage.getItem('combustible_tickets_backup');
             if (localData) { 
                 registros = JSON.parse(localData);
-                console.log("Registros locales:", registros.length);
+                console.log("Registros locales cargados:", registros.length);
+                actualizarAutocompletar();
                 updateUI(); 
                 updateSyncStatus('offline'); 
+            } else {
+                console.log("No hay datos locales");
+                updateUI();
             }
         }
         
@@ -846,16 +925,15 @@
                 updateSyncStatus('syncing');
                 const docRef = await addDoc(ticketsCollection, registro);
                 console.log("Ticket guardado:", docRef.id);
-                const backup = [...registros, { id: docRef.id, ...registro }];
-                localStorage.setItem('combustible_tickets_backup', JSON.stringify(backup));
                 return true;
             } catch (error) {
-                console.error("Error:", error);
-                alert('Error al guardar. Se guardará localmente.');
+                console.error("Error al guardar:", error);
+                alert('Error al guardar en la nube. Se guardará localmente.');
                 const localId = 'local_' + Date.now();
                 const localRegistro = { ...registro, id: localId };
                 registros.push(localRegistro);
                 localStorage.setItem('combustible_tickets_backup', JSON.stringify(registros));
+                actualizarAutocompletar();
                 updateUI();
                 return true;
             }
@@ -868,11 +946,11 @@
                 return true;
             } catch (error) {
                 console.error("Error al actualizar:", error);
-                // Actualizar localmente si falla la conexión
                 const index = registros.findIndex(r => r.id === id);
                 if (index !== -1) {
                     registros[index] = { ...registros[index], ...data };
                     localStorage.setItem('combustible_tickets_backup', JSON.stringify(registros));
+                    actualizarAutocompletar();
                     updateUI();
                 }
                 alert('Error al actualizar en la nube, pero se guardó localmente.');
@@ -880,20 +958,43 @@
             }
         }
         
-        async function deleteRegistro(id) {
-            if(currentUser.role !== 'admin') { alert('Solo administrador puede eliminar'); return false; }
-            if(confirm('¿Eliminar permanentemente este ticket?')) {
+        window.deleteRegistro = async function(id) {
+            if(currentUser.role !== 'admin') { 
+                alert('Solo administrador puede eliminar'); 
+                return false; 
+            }
+            if(confirm('⚠️ ¿Eliminar permanentemente este ticket?\nEsta acción no se puede deshacer.')) {
                 try {
                     const docRef = doc(db, 'tickets', id);
                     await deleteDoc(docRef);
+                    console.log("Ticket eliminado:", id);
+                    
+                    const localBackup = localStorage.getItem('combustible_tickets_backup');
+                    if (localBackup) {
+                        let backup = JSON.parse(localBackup);
+                        backup = backup.filter(r => r.id !== id);
+                        localStorage.setItem('combustible_tickets_backup', JSON.stringify(backup));
+                    }
+                    
+                    alert('✅ Ticket eliminado correctamente');
                     return true;
                 } catch (error) {
-                    alert('Error al eliminar');
+                    console.error("Error al eliminar:", error);
+                    const index = registros.findIndex(r => r.id === id);
+                    if (index !== -1) {
+                        registros.splice(index, 1);
+                        localStorage.setItem('combustible_tickets_backup', JSON.stringify(registros));
+                        actualizarAutocompletar();
+                        updateUI();
+                        alert('✅ Ticket eliminado localmente');
+                        return true;
+                    }
+                    alert('Error al eliminar el ticket');
                     return false;
                 }
             }
             return false;
-        }
+        };
         
         function actualizarMetricas() {
             if(currentUser.role !== 'admin') return;
@@ -921,7 +1022,7 @@
                 filtered = filtered.filter(r => r.fecha && r.fecha.startsWith(year));
             }
             
-            const centros = ["Los Ruices", "El Rosal", "La Naya", "El Paraiso", "MSO Caracas", "MSO Visita"];
+            const centros = ["Los Ruices", "El Rosal", "La Naya", "El Paraiso", "Obras", "MSO Caracas", "MSO Visita"];
             const datosPorCentro = {};
             centros.forEach(centro => { datosPorCentro[centro] = { litros: 0, costo: 0, tickets: 0 }; });
             
@@ -952,7 +1053,7 @@
                 if (barrasChart) barrasChart.destroy();
                 const labels = [];
                 const litrosData = [];
-                const colores = ['#3498db', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6', '#1abc9c'];
+                const colores = ['#3498db', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6', '#1abc9c', '#e67e22'];
                 for (const [centro, datos] of Object.entries(datosPorCentro)) {
                     if (datos.litros > 0) {
                         labels.push(centro);
@@ -963,82 +1064,9 @@
                 barrasChart = new Chart(ctx, {
                     type: 'bar',
                     data: { labels: labels, datasets: [{ label: 'Litros Consumidos', data: litrosData, backgroundColor: colores.slice(0, labels.length), borderColor: '#2c3e50', borderWidth: 1, borderRadius: 8 }] },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' }, title: { display: true, text: `Consumo de Combustible por Centro - ${periodo === 'diario' ? 'Hoy' : periodo === 'semanal' ? 'Última Semana' : periodo === 'mensual' ? month : periodo === 'anual' ? year : 'Todos'}`, font: { size: 14 } } }, scales: { y: { beginAtZero: true, title: { display: true, text: 'Litros' } }, x: { title: { display: true, text: 'Centro de Operaciones' } } } }
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' }, title: { display: true, text: `Consumo de Combustible por Centro`, font: { size: 14 } } }, scales: { y: { beginAtZero: true, title: { display: true, text: 'Litros' } }, x: { title: { display: true, text: 'Centro de Operaciones' } } } }
                 });
             }
-        }
-        
-        function exportarPDFMetricas() {
-            if(currentUser.role !== 'admin') return;
-            
-            let filtered = [...registros];
-            const periodo = document.getElementById('metricPeriodo')?.value;
-            const month = document.getElementById('metricMonth')?.value;
-            const year = document.getElementById('metricYear')?.value;
-            const today = getToday();
-            
-            if (periodo === 'diario') filtered = filtered.filter(r => r.fecha === today);
-            else if (periodo === 'semanal') {
-                const todayDate = new Date(today);
-                const weekAgo = new Date(todayDate);
-                weekAgo.setDate(weekAgo.getDate() - 7);
-                const weekAgoStr = weekAgo.toISOString().slice(0,10);
-                filtered = filtered.filter(r => r.fecha && r.fecha >= weekAgoStr);
-            } 
-            else if (periodo === 'mensual' && month) filtered = filtered.filter(r => r.fecha && r.fecha.startsWith(month));
-            else if (periodo === 'anual' && year) filtered = filtered.filter(r => r.fecha && r.fecha.startsWith(year));
-            
-            const centros = ["Los Ruices", "El Rosal", "La Naya", "El Paraiso", "MSO Caracas", "MSO Visita"];
-            const datosPorCentro = {};
-            centros.forEach(centro => { datosPorCentro[centro] = { litros: 0, costo: 0, tickets: 0 }; });
-            
-            filtered.forEach(r => {
-                if (r.centro && datosPorCentro[r.centro]) {
-                    datosPorCentro[r.centro].litros += (r.litros || 0);
-                    datosPorCentro[r.centro].costo += (r.costoTotal || 0);
-                    datosPorCentro[r.centro].tickets += 1;
-                }
-            });
-            
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('landscape');
-            doc.setFontSize(18);
-            doc.setTextColor(26, 41, 128);
-            doc.text('Reporte de Consumo de Combustible', 14, 20);
-            doc.setFontSize(11);
-            doc.setTextColor(100, 100, 100);
-            let periodoTexto = '';
-            if (periodo === 'diario') periodoTexto = `Fecha: ${formatDate(today)}`;
-            else if (periodo === 'semanal') periodoTexto = 'Período: Últimos 7 días';
-            else if (periodo === 'mensual') periodoTexto = `Mes: ${month}`;
-            else if (periodo === 'anual') periodoTexto = `Año: ${year}`;
-            doc.text(`Período: ${periodoTexto}`, 14, 28);
-            doc.text(`Generado: ${new Date().toLocaleString('es-VE')}`, 14, 34);
-            
-            const tablaData = [];
-            let totalLitros = 0, totalCosto = 0, totalTickets = 0;
-            for (const [centro, datos] of Object.entries(datosPorCentro)) {
-                if (datos.litros > 0 || datos.tickets > 0) {
-                    tablaData.push([centro, datos.litros.toFixed(2), `$${datos.costo.toFixed(2)}`, datos.tickets]);
-                    totalLitros += datos.litros;
-                    totalCosto += datos.costo;
-                    totalTickets += datos.tickets;
-                }
-            }
-            if (tablaData.length === 0) tablaData.push(['No hay datos', '0', '$0', '0']);
-            else tablaData.push(['TOTAL', totalLitros.toFixed(2), `$${totalCosto.toFixed(2)}`, totalTickets]);
-            
-            doc.autoTable({ head: [['Centro de Operaciones', 'Litros', 'Costo Total', 'N° Tickets']], body: tablaData, startY: 42, theme: 'striped', headStyles: { fillColor: [52, 152, 219], textColor: 255 } });
-            
-            const finalY = doc.lastAutoTable.finalY + 10;
-            if (filtered.length > 0) {
-                doc.text('Detalle de Tickets', 14, finalY);
-                const detalleData = filtered.slice(0, 30).map(r => [formatDate(r.fecha), r.numero || '-', r.placa || '-', r.centro || '-', (r.litros || 0).toFixed(2), `$${(r.costoTotal || 0).toFixed(2)}`]);
-                doc.autoTable({ head: [['Fecha', 'Ticket', 'Placa', 'Centro', 'Litros', 'Costo']], body: detalleData, startY: finalY + 5, theme: 'striped', headStyles: { fillColor: [52, 152, 219], textColor: 255 }, styles: { fontSize: 8 } });
-                if (filtered.length > 30) doc.text(`* Mostrando los últimos 30 de ${filtered.length} tickets`, 14, doc.lastAutoTable.finalY + 5);
-            }
-            doc.save(`reporte_consumo_${periodo}_${today}.pdf`);
-            alert(`✅ Reporte PDF generado con ${filtered.length} registros`);
         }
         
         function updateStats() {
@@ -1052,10 +1080,8 @@
             document.getElementById('totalRecords').textContent = registros.length;
         }
         
-        // FUNCIÓN ACTUALIZADA: Genera el ticket con campo de litros en blanco para llenar MANUALMENTE en la gasolinera
         function generateTwoCopiesTicketHTML(ticket) {
             const safe = (v, d = '-') => v === undefined || v === null ? d : v;
-            // Determinar si el ticket está completado (tiene litros) o pendiente
             const isCompleted = ticket.litros && ticket.litros > 0;
             const litrosDisplay = isCompleted ? `${(ticket.litros || 0).toFixed(2)} L` : '__________ L (llenar en estación)';
             const costoDisplay = isCompleted ? `$${(ticket.costoTotal || 0).toFixed(2)}` : '__________ $ (calcular al llenar)';
@@ -1091,12 +1117,9 @@
             return `<div style="display:flex; flex-direction:column; gap:8px;"><div class="ticket-copy">${content}</div><div style="text-align:center; color:#e74c3c;">—•—•—•—•—•—•—•—•—•—•—•—•—•—•—•</div><div class="ticket-copy">${content}</div></div>`;
         }
         
-        // Función para completar el ticket (solo Jefe Técnico o Admin)
         window.completarTicket = async function(id) {
             const r = registros.find(r => r.id === id);
             if(!r) return;
-            // Verificar si ya está completado
-            const isCompleted = r.litros && r.litros > 0;
             
             document.getElementById('editTicketBody').innerHTML = `
                 <form id="editForm">
@@ -1162,8 +1185,6 @@
         window.editRegistro = async function(id) {
             const r = registros.find(r => r.id === id);
             if(!r) return;
-            // Si el ticket ya tiene litros, permitir edición normal
-            const isCompleted = r.litros && r.litros > 0;
             
             document.getElementById('editTicketBody').innerHTML = `
                 <form id="editForm">
@@ -1194,7 +1215,6 @@
             document.getElementById('editTicketModal').style.display = 'flex';
         };
         
-        window.deleteRegistro = deleteRegistro;
         window.reimprimirTicket = function(id) {
             const ticket = registros.find(r => r.id === id);
             if(ticket) {
@@ -1217,6 +1237,12 @@
             if(co && currentUser.role === 'admin') filtered = filtered.filter(r => r.centro === co);
             if(fecha) filtered = filtered.filter(r => r.fecha === fecha);
             
+            // Ordenar en memoria (más reciente primero)
+            filtered.sort((a, b) => {
+                if (a.fecha !== b.fecha) return b.fecha.localeCompare(a.fecha);
+                return (b.createdAt || '').localeCompare(a.createdAt || '');
+            });
+            
             const tbody = document.getElementById('historialBody');
             if (!tbody) return;
             if (filtered.length === 0) {
@@ -1235,7 +1261,7 @@
                     <td>${formatDate(r.fecha)}</td>
                     <td><strong>${r.numero || '-'}</strong></td>
                     <td>${r.placa || '-'}</td>
-                    <td>${r.centro || '-'}</td>
+                    <td>${r.centro || '-'}${r.departamentoMSO ? ` (${r.departamentoMSO})` : ''}</td>
                     <td>${r.solicitante || '-'}</td>
                     <td>${r.tipo === 'gasolina' ? '⛽ Gasolina' : '🛢️ Gasoil'}</td>
                     <td>${litrosDisplay}</td>
@@ -1243,8 +1269,8 @@
                     <td>${statusBadge}</td>
                     <td class="action-btns">
                         ${isPending ? `<button class="action-btn complete-btn" onclick="window.completarTicket('${r.id}')"><i class="fas fa-gas-pump"></i> Completar</button>` : `<button class="action-btn edit-btn" onclick="window.editRegistro('${r.id}')">Editar</button>`}
-                        ${currentUser.role === 'admin' ? `<button class="action-btn delete-btn" onclick="window.deleteRegistro('${r.id}')">Eliminar</button>` : ''}
-                        <button class="action-btn print-btn" onclick="window.reimprimirTicket('${r.id}')">Reimprimir</button>
+                        ${currentUser.role === 'admin' ? `<button class="action-btn delete-btn" onclick="window.deleteRegistro('${r.id}')"><i class="fas fa-trash"></i> Eliminar</button>` : ''}
+                        <button class="action-btn print-btn" onclick="window.reimprimirTicket('${r.id}')"><i class="fas fa-print"></i> Reimprimir</button>
                     </td>
                 </tr>`;
             }
@@ -1254,7 +1280,6 @@
         function init() {
             const today = getToday();
             document.getElementById('ticketFecha').value = today;
-            document.getElementById('ticketNumero').value = generateTicketNumber();
             document.getElementById('metricMonth').value = today.slice(0,7);
             document.getElementById('metricYear').value = today.slice(0,4);
             
@@ -1271,37 +1296,65 @@
                     deptoMSO = document.getElementById('departamentoMSO').value;
                     if(!deptoMSO) { alert('Seleccione departamento MSO'); return; }
                 }
-                // Guardar el ticket SIN litros (se guarda como 0)
+                
+                const solicitante = document.getElementById('ticketSolicitante').value;
+                const placa = document.getElementById('ticketPlaca').value.toUpperCase();
+                const autorizado = document.getElementById('ticketAutorizado').value;
+                
+                if(!solicitante) { alert("Ingrese el solicitante"); return; }
+                if(!placa) { alert("Ingrese la placa"); return; }
+                if(!autorizado) { alert("Ingrese el autorizado"); return; }
+                
+                autocompletarData.solicitantes.add(solicitante);
+                autocompletarData.placas.add(placa);
+                autocompletarData.autorizados.add(autorizado);
+                actualizarAutocompletar();
+                
+                const numeroTicket = generateTicketNumber(centro, deptoMSO);
+                
                 const newRegistro = {
-                    numero: generateTicketNumber(), 
+                    numero: numeroTicket, 
                     fecha: getToday(), 
                     centro, 
                     departamentoMSO: deptoMSO,
-                    solicitante: document.getElementById('ticketSolicitante').value,
-                    placa: document.getElementById('ticketPlaca').value.toUpperCase(), 
+                    solicitante: solicitante,
+                    placa: placa, 
                     tipo: document.getElementById('ticketTipo').value, 
-                    litros: 0,  // INICIALMENTE EN 0
-                    costoTotal: 0, // COSTO INICIAL 0
-                    autorizado: document.getElementById('ticketAutorizado').value, 
+                    litros: 0,
+                    costoTotal: 0,
+                    autorizado: autorizado, 
                     obs: document.getElementById('ticketObs').value,
                     completado: false,
                     createdAt: new Date().toISOString()
                 };
                 const success = await addRegistro(newRegistro);
                 if(success) {
-                    // Mostrar el ticket con campo de litros en blanco
                     document.getElementById('ticketModalBody').innerHTML = generateTwoCopiesTicketHTML(newRegistro);
                     document.getElementById('ticketModal').style.display = 'flex';
                     document.getElementById('ticketForm').reset();
-                    document.getElementById('ticketNumero').value = generateTicketNumber();
                     document.getElementById('ticketFecha').value = getToday();
-                    if(currentUser.role !== 'admin' && currentUser.centro) document.getElementById('ticketCO').value = currentUser.centro;
+                    if(currentUser.role !== 'admin' && currentUser.centro) {
+                        document.getElementById('ticketCO').value = currentUser.centro;
+                    }
+                    const newCentro = document.getElementById('ticketCO').value;
+                    const newDepto = document.getElementById('departamentoMSO').value;
+                    document.getElementById('ticketNumero').value = generateTicketNumber(newCentro, newDepto);
                     alert('✅ Ticket generado exitosamente. El islero debe llenar los litros en la estación de servicio.');
                 }
             };
             
             document.getElementById('ticketCO').onchange = (e) => {
-                document.getElementById('departamentoMsoGroup').style.display = (e.target.value === 'MSO Caracas' && currentUser.role === 'admin') ? 'block' : 'none';
+                const showDepto = (e.target.value === 'MSO Caracas' && currentUser.role === 'admin');
+                document.getElementById('departamentoMsoGroup').style.display = showDepto ? 'block' : 'none';
+                const centro = e.target.value;
+                const depto = document.getElementById('departamentoMSO').value;
+                document.getElementById('ticketNumero').value = generateTicketNumber(centro, depto);
+            };
+            
+            document.getElementById('departamentoMSO').onchange = () => {
+                const centro = document.getElementById('ticketCO').value;
+                const depto = document.getElementById('departamentoMSO').value;
+                document.getElementById('ticketNumero').value = generateTicketNumber(centro, depto);
             };
             
             document.getElementById('clearFilters').onclick = () => {
@@ -1317,7 +1370,6 @@
                 document.getElementById('yearGroup').style.display = e.target.value === 'anual' ? 'flex' : 'none';
             };
             document.getElementById('aplicarFiltros').onclick = actualizarMetricas;
-            document.getElementById('exportarPDFMetricas').onclick = exportarPDFMetricas;
             
             document.querySelectorAll('.close-modal').forEach(btn => btn.onclick = () => {
                 document.getElementById('ticketModal').style.display = 'none';
