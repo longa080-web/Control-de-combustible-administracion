@@ -854,9 +854,10 @@
                                 <h3>Detalle por Centro</h3>
                                 <table id="detalleMetricas">
                                     <thead>
-                                        <tr><th>Centro de Operaciones</th><th>Total Litros</th><th>Total Costo ($)</th><th>Cantidad de Tickets</th> </thead>
+                                        <tr><th>Centro de Operaciones</th><th>Total Litros</th><th>Total Costo ($)</th><th>Cantidad de Tickets</th></tr>
+                                    </thead>
                                     <tbody id="detalleMetricasBody"></tbody>
-                                  </table>
+                                </table>
                             </div>
                         </div>
                     </section>
@@ -874,9 +875,10 @@
                             <div class="table-container">
                                 <table id="historialTable">
                                     <thead>
-                                        <tr><th>Fecha</th><th>Ticket</th><th>Placa</th><th>CO</th><th>Solicitante</th><th>Tipo</th><th>Litros</th><th>Costo</th><th>Estado</th><th>Acciones</th> </thead>
+                                        <tr><th>Fecha</th><th>Ticket</th><th>Placa</th><th>CO</th><th>Solicitante</th><th>Tipo</th><th>Litros</th><th>Costo</th><th>Estado</th><th>Acciones</th></tr>
+                                    </thead>
                                     <tbody id="historialBody">
-                                        <tr><td colspan="10" style="text-align:center; padding:40px;">Cargando datos...</td> </tr>
+                                        <tr><td colspan="10" style="text-align:center; padding:40px;">Cargando datos...</td></tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -1251,10 +1253,23 @@
                 filtered = filtered.filter(r => r.fecha && r.fecha.startsWith(year));
             }
             
-            const centros = ["Los Ruices", "El Rosal", "La Naya", "El Paraiso", "Obras", "MSO Caracas", "MSO Visita"];
-            const datosPorCentro = {};
-            centros.forEach(centro => { datosPorCentro[centro] = { litros: 0, costo: 0, tickets: 0 }; });
+            // LISTA COMPLETA DE CENTROS
+            const centros = [
+                "Los Ruices", 
+                "El Rosal", 
+                "La Naya", 
+                "El Paraiso", 
+                "Obras", 
+                "MSO Caracas", 
+                "MSO Visita"
+            ];
             
+            const datosPorCentro = {};
+            centros.forEach(centro => { 
+                datosPorCentro[centro] = { litros: 0, costo: 0, tickets: 0 }; 
+            });
+            
+            // Acumular datos
             filtered.forEach(r => {
                 if (r.centro && datosPorCentro[r.centro]) {
                     datosPorCentro[r.centro].litros += (r.litros || 0);
@@ -1263,37 +1278,119 @@
                 }
             });
             
+            // Ordenar centros alfabéticamente
+            const centrosOrdenados = [...centros].sort();
+            
             const tbody = document.getElementById('detalleMetricasBody');
             if (tbody) {
                 let html = '';
-                for (const [centro, datos] of Object.entries(datosPorCentro)) {
-                    if (datos.litros > 0 || datos.tickets > 0) {
-                        html += `irs.html<td><strong>${centro}</strong></td><td>${datos.litros.toFixed(2)} L</td><td>$${datos.costo.toFixed(2)}</td><td>${datos.tickets}</td>`;
-                    }
+                let totalLitrosGeneral = 0;
+                let totalCostoGeneral = 0;
+                let totalTicketsGeneral = 0;
+                
+                for (const centro of centrosOrdenados) {
+                    const datos = datosPorCentro[centro];
+                    totalLitrosGeneral += datos.litros;
+                    totalCostoGeneral += datos.costo;
+                    totalTicketsGeneral += datos.tickets;
+                    
+                    // Mostrar todos los centros
+                    const litrosClass = datos.litros === 0 ? 'style="color: #999;"' : '';
+                    const ticketsClass = datos.tickets === 0 ? 'style="color: #999;"' : '';
+                    
+                    html += `<tr>
+                        <td><strong>${centro}</strong></td>
+                        <td ${litrosClass}>${datos.litros.toFixed(2)} L</td>
+                        <td>$${datos.costo.toFixed(2)}</td>
+                        <td ${ticketsClass}>${datos.tickets}</td>
+                    </tr>`;
                 }
-                if (html === '') {
-                    html = '<tr><td colspan="4" style="text-align:center; padding:40px;">No hay datos en el período seleccionado</td></tr>';
+                
+                // Agregar fila de total general si hay datos
+                if (totalLitrosGeneral > 0 || totalTicketsGeneral > 0) {
+                    html += `<tr style="border-top: 2px solid var(--border-color); background-color: var(--bg-primary); font-weight: bold;">
+                        <td><strong>TOTAL GENERAL</strong></td>
+                        <td><strong>${totalLitrosGeneral.toFixed(2)} L</strong></td>
+                        <td><strong>$${totalCostoGeneral.toFixed(2)}</strong></td>
+                        <td><strong>${totalTicketsGeneral}</strong></td>
+                    </tr>`;
                 }
+                
                 tbody.innerHTML = html;
             }
             
+            // Actualizar gráfico de barras
             const ctx = document.getElementById('barrasChart')?.getContext('2d');
             if (ctx) {
                 if (barrasChart) barrasChart.destroy();
+                
                 const labels = [];
                 const litrosData = [];
                 const colores = ['#3498db', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6', '#1abc9c', '#e67e22'];
+                
+                // Mostrar todos los centros en el gráfico
                 for (const [centro, datos] of Object.entries(datosPorCentro)) {
-                    if (datos.litros > 0) {
-                        labels.push(centro);
-                        litrosData.push(datos.litros);
-                    }
+                    labels.push(centro);
+                    litrosData.push(datos.litros);
                 }
-                if (labels.length === 0) { labels.push("Sin datos"); litrosData.push(0); }
+                
                 barrasChart = new Chart(ctx, {
                     type: 'bar',
-                    data: { labels: labels, datasets: [{ label: 'Litros Consumidos', data: litrosData, backgroundColor: colores.slice(0, labels.length), borderColor: '#2c3e50', borderWidth: 1, borderRadius: 8 }] },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' }, title: { display: true, text: `Consumo de Combustible por Centro`, font: { size: 14 } } }, scales: { y: { beginAtZero: true, title: { display: true, text: 'Litros' } }, x: { title: { display: true, text: 'Centro de Operaciones' } } } }
+                    data: { 
+                        labels: labels, 
+                        datasets: [{ 
+                            label: 'Litros Consumidos', 
+                            data: litrosData, 
+                            backgroundColor: colores.slice(0, labels.length), 
+                            borderColor: '#2c3e50', 
+                            borderWidth: 1, 
+                            borderRadius: 8 
+                        }] 
+                    },
+                    options: { 
+                        responsive: true, 
+                        maintainAspectRatio: false, 
+                        plugins: { 
+                            legend: { position: 'top' }, 
+                            title: { 
+                                display: true, 
+                                text: `Consumo de Combustible por Centro`, 
+                                font: { size: 14 } 
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.y !== null) {
+                                            label += context.parsed.y.toFixed(2) + ' litros';
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        }, 
+                        scales: { 
+                            y: { 
+                                beginAtZero: true, 
+                                title: { display: true, text: 'Litros' },
+                                ticks: {
+                                    callback: function(value) {
+                                        return value.toFixed(2) + ' L';
+                                    }
+                                }
+                            }, 
+                            x: { 
+                                title: { display: true, text: 'Centro de Operaciones' },
+                                ticks: {
+                                    maxRotation: 45,
+                                    minRotation: 45
+                                }
+                            } 
+                        } 
+                    }
                 });
             }
         }
